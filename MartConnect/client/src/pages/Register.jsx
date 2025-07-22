@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { toast } from 'react-toastify'
-import { registerUser } from '../../../../sunbeam_git_data/wpt/Day15/code/airbnb/src/services/user'
 import { Link, useNavigate } from 'react-router-dom'
+import { registerUser } from '../services/user'
 
 function Register() {
   // create state members
