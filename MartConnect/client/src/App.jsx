@@ -5,7 +5,8 @@ import { AuthContext } from './contexts/auth.context'
 import { ToastContainer } from 'react-toastify'
 import Login from './pages/Login'
 import Register from './pages/Register'
-
+import AddProduct from './components/AddProduct'
+  
 function App() {
   // state for user context
   const [user, setUser] = useState(null)
@@ -24,6 +25,11 @@ function App() {
             path='/home'
             element={user ? <Home /> : <Navigate to='/' />}
           />
+
+          <Route
+            path='/addProduct'
+            element={<AddProduct/>}
+          />  
         </Routes>
       </AuthContext.Provider>
 
