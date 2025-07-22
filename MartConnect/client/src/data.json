@@ -1,0 +1,52 @@
+[
+  {
+    "product_id": 1,
+    "name": "Wireless Mouse",
+    "price": 599.99,
+    "unit": "piece",
+    "stock": 50,
+    "image_url": "/product_images/mouse.jpg",
+    "description": "Ergonomic wireless mouse with adjustable DPI.",
+    "category": "Electronics"
+  },
+  {
+    "product_id": 2,
+    "name": "Yoga Mat",
+    "price": 899,
+    "unit": "piece",
+    "stock": 100,
+    "image_url": "/product_images/yogamat.jpg",
+    "description": "Non-slip yoga mat, eco-friendly material.",
+    "category": "Fitness"
+  },
+  {
+    "product_id": 3,
+    "name": "Bluetooth Speaker",
+    "price": 1299.5,
+    "unit": "piece",
+    "stock": 35,
+    "image_url": "/product_images/speaker.jpg",
+    "description": "Portable Bluetooth speaker with stereo sound.",
+    "category": "Electronics"
+  },
+  {
+    "product_id": 4,
+    "name": "Cooking Oil 1L",
+    "price": 155.75,
+    "unit": "bottle",
+    "stock": 250,
+    "image_url": "/product_images/oil.jpg",
+    "description": "Refined sunflower cooking oil (1L bottle).",
+    "category": "Grocery"
+  },
+  {
+    "product_id": 5,
+    "name": "Notebook",
+    "price": 45.0,
+    "unit": "piece",
+    "stock": 500,
+    "image_url": "/product_images/notbook.jpg",
+    "description": "200-page ruled notebook for school/office use.",
+    "category": "Stationery"
+  }
+]
