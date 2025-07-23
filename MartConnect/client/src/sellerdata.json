@@ -1,0 +1,46 @@
+[
+  {
+    "seller_id": 1,
+    "first_name": "Ayush",
+    "last_name": "Dhoke",
+    "phone": "9876543210",
+    "email": "ayush@martconnect.com",
+    "password": "password123",
+    "created_at": "2025-01-15T10:30:00",
+    "shop_name": "Ayush Electronics",
+    "shop_address": "Sitabuldi, Nagpur, Maharashtra"
+  },
+  {
+    "seller_id": 2,
+    "first_name": "Sneha",
+    "last_name": "Kumar",
+    "phone": "9123456780",
+    "email": "sneha@fashionhub.in",
+    "password": "sneha@123",
+    "created_at": "2025-02-10T14:20:00",
+    "shop_name": "FashionHub",
+    "shop_address": "MG Road, Pune, Maharashtra"
+  },
+  {
+    "seller_id": 3,
+    "first_name": "Ravi",
+    "last_name": "Sharma",
+    "phone": "9988776655",
+    "email": "ravi@technoworld.com",
+    "password": "ravi@2025",
+    "created_at": "2025-03-05T09:10:00",
+    "shop_name": "TechnoWorld",
+    "shop_address": "Powai, Mumbai, Maharashtra"
+  },
+  {
+    "seller_id": 4,
+    "first_name": "Priya",
+    "last_name": "Joshi",
+    "phone": "9090909090",
+    "email": "priya@smartkitchen.com",
+    "password": "kitchen@321",
+    "created_at": "2025-04-12T17:45:00",
+    "shop_name": "Smart Kitchen",
+    "shop_address": "Civil Lines, Nashik, Maharashtra"
+  }
+]

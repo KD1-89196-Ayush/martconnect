@@ -7,7 +7,8 @@
     "stock": 50,
     "image_url": "/product_images/mouse.jpg",
     "description": "Ergonomic wireless mouse with adjustable DPI.",
-    "category": "Electronics"
+    "category": "Electronics",
+    "seller_id": 1
   },
   {
     "product_id": 2,
@@ -17,7 +18,8 @@
     "stock": 100,
     "image_url": "/product_images/yogamat.jpg",
     "description": "Non-slip yoga mat, eco-friendly material.",
-    "category": "Fitness"
+    "category": "Fitness",
+    "seller_id": 1
   },
   {
     "product_id": 3,
@@ -27,7 +29,8 @@
     "stock": 35,
     "image_url": "/product_images/speaker.jpg",
     "description": "Portable Bluetooth speaker with stereo sound.",
-    "category": "Electronics"
+    "category": "Electronics",
+    "seller_id": 2
   },
   {
     "product_id": 4,
@@ -37,7 +40,8 @@
     "stock": 250,
     "image_url": "/product_images/oil.jpg",
     "description": "Refined sunflower cooking oil (1L bottle).",
-    "category": "Grocery"
+    "category": "Grocery",
+    "seller_id": 1
   },
   {
     "product_id": 5,
@@ -47,6 +51,7 @@
     "stock": 500,
     "image_url": "/product_images/notbook.jpg",
     "description": "200-page ruled notebook for school/office use.",
-    "category": "Stationery"
+    "category": "Stationery",
+    "seller_id": 3
   }
 ]

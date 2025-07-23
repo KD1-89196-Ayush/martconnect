@@ -1,73 +1,76 @@
-import React, { useContext, useState } from 'react'
-import { toast } from 'react-toastify'
-import { useLocation } from 'react-router-dom'
-
-
-import { Link, useNavigate } from 'react-router-dom'
-import { loginUser } from '../services/user'
-import { AuthContext } from '../contexts/auth.context'
+import React, { useContext, useState } from 'react';
+import { toast } from 'react-toastify';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { loginUser } from '../services/user';
+import { AuthContext } from '../contexts/auth.context';
+import sellerData from '../sellerdata.json';
 
 function Login() {
-  // get the setUser from AuthContext
-  const { setUser } = useContext(AuthContext)
+  const { setUser } = useContext(AuthContext);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const role = location.state?.role || 'User';
 
-  // create state to get input from user
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  // get navigate() function reference
-  const navigate = useNavigate()
-
-  const location = useLocation()
-  const role = location.state?.role || 'User'
-
-
-  // button click event handler
   const onLogin = async () => {
-    if (email.length == 0) {
-      toast.warn('please enter email')
-    } else if (password.length == 0) {
-      toast.warn('please enter password')
+    if (email.trim() === '') {
+      toast.warn('Please enter email');
+    } else if (password.trim() === '') {
+      toast.warn('Please enter password');
     } else {
-      // call the Login API
-      const result = await loginUser(email, password)
-      if (!result) {
-        toast.error('Error while login')
-      } else {
-        if (result['status'] == 'success') {
-          // persist the login information like token, username etc
-          const { firstName, lastName, token } = result['data']
+      if (role === 'Seller') {
+        const seller = sellerData.find(
+          (s) => s.email === email && s.password === password
+        );
 
-          // persist the information in session storage
-          sessionStorage.setItem('firstName', firstName)
-          sessionStorage.setItem('lastName', lastName)
-          sessionStorage.setItem('token', token)
+        if (seller) {
+          const sellerUser = {
+            role: 'Seller',
+            seller_id: seller.seller_id,
+            first_name: seller.first_name,
+            last_name: seller.last_name,
+            shop_name: seller.shop_name,
+            email: seller.email,
+          };
 
-          // set the user details in the AuthContext
-          setUser({
-            firstName,
-            lastName,
-          })
-
-          console.log('result: ', result)
-          toast.success('Welcome to application')
-
-          // navigate to home screen
-          navigate('/home/properties')
+          setUser(sellerUser);
+          localStorage.setItem('user', JSON.stringify(sellerUser));
+          toast.success(`Welcome ${seller.first_name}`);
+          navigate('/seller-home', { state: { seller: sellerUser } });
         } else {
-          toast.error('Invalid email or password')
+          toast.error('Invalid seller credentials');
+        }
+      } else {
+        const result = await loginUser(email, password);
+        if (!result) {
+          toast.error('Error while login');
+        } else if (result.status === 'success') {
+          const { firstName, lastName, token } = result.data;
+          const customerUser = {
+            role: 'User',
+            first_name: firstName,
+            last_name: lastName,
+            token,
+          };
+          setUser(customerUser);
+          localStorage.setItem('user', JSON.stringify(customerUser));
+          toast.success('Welcome to application');
+          navigate('/home/properties');
+        } else {
+          toast.error('Invalid email or password');
         }
       }
     }
-  }
+  };
 
   return (
-    <div className='container'>
-      <h2 className='page-header'>{role} Login</h2>
+    <div className='container d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
+      <div className='card shadow-sm p-4 w-100' style={{ maxWidth: '400px' }}>
+        <h3 className='text-center mb-4 text-primary'>{role} Login</h3>
 
-      <div className='form'>
         <div className='mb-3'>
-          <label htmlFor=''>Email</label>
+          <label className='form-label'>Email</label>
           <input
             onChange={(e) => setEmail(e.target.value)}
             type='email'
@@ -77,28 +80,30 @@ function Login() {
         </div>
 
         <div className='mb-3'>
-          <label htmlFor=''>Password</label>
+          <label className='form-label'>Password</label>
           <input
             onChange={(e) => setPassword(e.target.value)}
             type='password'
             className='form-control'
-            placeholder='#######'
+            placeholder='******'
           />
         </div>
-        <div className='mb-3'>
-          <div className='mb-3'>
-            Don't have an account yet? <Link to='/register'>Register here</Link>
-          </div>
-          <button
-            onClick={onLogin}
-            className='btn btn-success'
-          >
-            Login
-          </button>
+
+        <div className='mb-3 text-center'>
+          <span>
+            Don’t have an account?{' '}
+            <Link to='/register' className='text-decoration-none'>
+              Register here
+            </Link>
+          </span>
         </div>
+
+        <button onClick={onLogin} className='btn btn-success w-100'>
+          Login
+        </button>
       </div>
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;

@@ -1,0 +1,79 @@
+/* Base application background and text color */
+body {
+  background-color: #f0f8ff; /* lightest blueish background */
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Page header */
+.page-header {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  text-align: center;
+  color: #0a4d8c; /* darker blue tone */
+}
+
+/* Form container styling */
+.form {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Labels */
+.form label {
+  font-weight: 500;
+}
+
+/* Buttons */
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  font-weight: 500;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+/* Link style for back/login/register etc */
+a, .btn-link {
+  color: #0a4d8c;
+  text-decoration: none;
+}
+
+a:hover, .btn-link:hover {
+  text-decoration: underline;
+  color: #063970;
+}
+
+/* Navbar brand styling */
+.navbar-brand {
+  font-size: 24px;
+  color: #0a4d8c !important;
+}
+
+/* Card shadows for consistency */
+.card {
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+/* Toastify overrides (optional theme matching) */
+.Toastify__toast--success {
+  background: #d4edda;
+  color: #155724;
+}
+.Toastify__toast--error {
+  background: #f8d7da;
+  color: #721c24;
+}
+.Toastify__toast--warning {
+  background: #fff3cd;
+  color: #856404;
+}
