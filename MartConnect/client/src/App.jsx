@@ -8,6 +8,8 @@ import About from './components/Seller/About'
 import SellerContact from './components/Seller/contact'
 import { AuthContext } from './contexts/auth.context'
 import { ToastContainer } from 'react-toastify'
+import Login from './pages/Login'
+import Register from './pages/Register'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -50,8 +52,8 @@ function App() {
             path='/seller-contact'
             element={user ? <SellerContact /> : <Navigate to='/login' state={{ role: 'Seller' }} />}
           />
-
         </Routes>
+
       </AuthContext.Provider>
 
       <ToastContainer />

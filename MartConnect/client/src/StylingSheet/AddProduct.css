@@ -1,0 +1,81 @@
+/* Ensure the body and html take full height */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Container covers full viewport height and centers content */
+.container-fluid {
+  min-height: 100vh;
+  margin-left: 45vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Card styling */
+.card {
+  width: 100%;
+  max-width: 600px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 25px;
+}
+
+/* Shop title */
+.card h2 {
+  font-size: 26px;
+  font-weight: bold;
+  color: #343a40;
+}
+
+/* Category buttons */
+.btn-group .btn {
+  min-width: 120px;
+  font-weight: 500;
+}
+
+/* Active button style */
+.btn.active {
+  background-color: #0d6efd !important;
+  color: white !important;
+  border-color: #0d6efd !important;
+}
+
+/* Input and textarea */
+input.form-control,
+textarea.form-control,
+select.form-select {
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+/* Labels */
+.form-label {
+  font-weight: 500;
+}
+
+/* Submit button */
+.btn-success {
+  font-weight: bold;
+  font-size: 16px;
+  padding: 10px;
+}
+
+/* Responsive spacing for small devices */
+@media (max-width: 576px) {
+  .btn-group .btn {
+    min-width: 100px;
+    margin: 5px 0;
+  }
+
+  .card {
+    padding: 20px 15px;
+  }
+}
