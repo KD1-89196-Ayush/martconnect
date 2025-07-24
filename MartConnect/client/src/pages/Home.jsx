@@ -1,20 +1,30 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import productData from "../data.json";
+import { fetchProducts, addToCart, buyNow } from "../services/productService";
 
 function Home() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    // Fetch products from backend
+    fetchProducts()
+      .then(setProducts)
+      .catch((err) => console.error("Failed to load products", err));
+  }, []);
 
   const handleLogin = (role) => {
     navigate("/login", { state: { role } });
   };
 
-  const handleBuyNow = () => {
-    navigate("/login", { state: { role: "Customer" } });
+  const handleBuyNow = (productId) => {
+    navigate("/login", { state: { role: "Customer", action: "buy", productId } });
+    // If logged in: buyNow(productId, userId)
   };
 
-  const handleAddToCart = () => {
-    navigate("/login", { state: { role: "Customer" } });
+  const handleAddToCart = (productId) => {
+    navigate("/login", { state: { role: "Customer", action: "cart", productId } });
+    // If logged in: addToCart(productId, userId)
   };
 
   return (
@@ -27,15 +37,9 @@ function Home() {
           </a>
 
           <div className="ms-auto d-flex gap-2">
-            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Admin")}>
-              Admin
-            </button>
-            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Customer")}>
-              Customer
-            </button>
-            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Seller")}>
-              Seller
-            </button>
+            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Admin")}>Admin</button>
+            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Customer")}>Customer</button>
+            <button className="btn btn-dark btn-sm" onClick={() => handleLogin("Seller")}>Seller</button>
           </div>
         </div>
       </header>
@@ -44,7 +48,7 @@ function Home() {
       <main className="flex-grow-1 container py-4">
         <h2 className="text-center mb-4">Our Products</h2>
         <div className="row row-cols-1 row-cols-md-3 g-4">
-          {productData.map((product, index) => (
+          {products.map((product, index) => (
             <div className="col" key={index}>
               <div className="card h-100 shadow-sm d-flex flex-column">
                 <img
@@ -61,10 +65,10 @@ function Home() {
                   <div className="mt-auto d-flex justify-content-between align-items-center">
                     <span className="badge bg-secondary">{product.category}</span>
                     <div className="d-flex gap-2">
-                      <button className="btn btn-primary btn-sm" onClick={handleAddToCart}>
+                      <button className="btn btn-primary btn-sm" onClick={() => handleAddToCart(product.id)}>
                         Add to Cart
                       </button>
-                      <button className="btn btn-success btn-sm" onClick={handleBuyNow}>
+                      <button className="btn btn-success btn-sm" onClick={() => handleBuyNow(product.id)}>
                         Buy Now
                       </button>
                     </div>

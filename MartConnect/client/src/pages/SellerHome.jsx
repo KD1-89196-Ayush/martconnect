@@ -1,28 +1,63 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import productData from "../data.json";
 import Header from "../components/Seller/Header";
 import Footer from "../components/Seller/Footer";
+import { getProductsBySeller, deleteProductById } from "../services/sellerProductService";
+import { toast } from "react-toastify";
 
 function SellerHome() {
   const location = useLocation();
+  const [products, setProducts] = useState([]);
 
-  // Load seller from state or session
-  const seller = location.state?.seller || JSON.parse(sessionStorage.getItem('seller')) || {
+  // Get seller from navigation or session
+  const seller = location.state?.seller || JSON.parse(sessionStorage.getItem("seller")) || {
     seller_id: -1,
     first_name: "Seller",
-    shop_name: "Unknown Shop"
+    shop_name: "Unknown Shop",
   };
 
-  // Save seller to sessionStorage if loaded from state
-  if (location.state?.seller) {
-    sessionStorage.setItem("seller", JSON.stringify(location.state.seller));
-  }
+  // Save seller to sessionStorage if passed from login
+  useEffect(() => {
+    if (location.state?.seller) {
+      sessionStorage.setItem("seller", JSON.stringify(location.state.seller));
+    }
+  }, [location.state?.seller]);
 
-  // Filter products belonging to this seller
-  const sellerProducts = productData.filter(
-    (product) => product.seller_id === seller.seller_id
-  );
+  // Fetch products for this seller
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const result = await getProductsBySeller(seller.seller_id);
+        setProducts(result);
+      } catch (err) {
+        toast.error("Failed to load seller products");
+      }
+    };
+
+    loadProducts();
+  }, [seller.seller_id]);
+
+  const handleUpdate = (productId) => {
+    console.log("Update product:", productId);
+    // You can navigate to a form or open modal here
+  };
+
+  const handleDelete = async (productId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
+    if (!confirmDelete) return;
+
+    try {
+      const result = await deleteProductById(productId);
+      if (result && result.status === "success") {
+        toast.success("Product deleted successfully");
+        setProducts(products.filter((p) => p.product_id !== productId));
+      } else {
+        toast.error("Failed to delete product");
+      }
+    } catch (error) {
+      toast.error("Error deleting product");
+    }
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -35,8 +70,8 @@ function SellerHome() {
       <main className="flex-grow-1 container py-4">
         <h2 className="text-center mb-4">Your Products</h2>
         <div className="row row-cols-1 row-cols-md-3 g-4">
-          {sellerProducts.length > 0 ? (
-            sellerProducts.map((product) => (
+          {products.length > 0 ? (
+            products.map((product) => (
               <div className="col" key={product.product_id}>
                 <div className="card h-100 shadow-sm d-flex flex-column">
                   <img
@@ -45,11 +80,28 @@ function SellerHome() {
                     className="card-img-top"
                     style={{ height: "200px", objectFit: "cover" }}
                   />
-                  <div className="card-body d-flex flex-column">
+                  <div className="card-body d-flex flex-column position-relative">
                     <h5 className="card-title">{product.name}</h5>
                     <p className="card-text">{product.description}</p>
                     <p className="fw-bold text-success">₹{product.price}</p>
-                    <span className="badge bg-secondary mt-auto">{product.category}</span>
+
+                    <div className="d-flex justify-content-between align-items-end mt-auto">
+                      <span className="badge bg-secondary">{product.category}</span>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleUpdate(product.product_id)}
+                        >
+                          Update
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(product.product_id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

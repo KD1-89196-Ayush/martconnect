@@ -1,95 +1,67 @@
-import axios from 'axios'
-// import { config } from '../config'
+import axios from 'axios';
+import sellerData from '../sellerdata.json'; // local fallback
+const BASE_URL = 'http://localhost:4000/api';
+const USE_DUMMY_DATA = false; // Toggle this to true to use only JSON data
 
-// export async function getProfile() {
-//   try {
-//     const url = `${config.serverURL}/user/profile`
-//     const token = sessionStorage.getItem('token')
-//     const response = await axios.get(url, {
-//       headers: { token },
-//     })
-//     if (response.status == 200) {
-//       return response.data
-//     }
-//   } catch (ex) {
-//     console.log(`exception: `, ex)
-//   }
-// }
+// Login user
+export const loginUser = async (email, password) => {
+  if (USE_DUMMY_DATA) {
+    const matched = sellerData.find(user => user.email === email && user.password === password);
+    if (matched) {
+      return {
+        status: 'success',
+        data: {
+          firstName: matched.first_name,
+          lastName: matched.last_name,
+          token: 'dummy-token'
+        }
+      };
+    } else {
+      return { status: 'error' };
+    }
+  }
 
-// export async function updateProfile(firstName, lastName, phone) {
-//   try {
-//     const url = `${config.serverURL}/user/profile`
-//     const token = sessionStorage.getItem('token')
-//     const body = { firstName, lastName, phone }
-//     const response = await axios.put(url, body, {
-//       headers: { token },
-//     })
-//     if (response.status == 200) {
-//       return response.data
-//     }
-//   } catch (ex) {
-//     console.log(`exception: `, ex)
-//   }
-// }
-
-export async function registerUser(
-  firstName,
-  lastName,
-  email,
-  phone,
-  password
-) {
   try {
-    // create the required url
-    const url = `${config.serverURL}/user/register`
+    const response = await axios.post(`${BASE_URL}/users/login`, { email, password });
+    return response.data;
+  } catch (err) {
+    console.error('Login failed, falling back to local JSON');
+    if (sellerData) {
+      const matched = sellerData.find(user => user.email === email && user.password === password);
+      if (matched) {
+        return {
+          status: 'success',
+          data: {
+            firstName: matched.first_name,
+            lastName: matched.last_name,
+            token: 'dummy-token'
+          }
+        };
+      }
+    }
+    return { status: 'error' };
+  }
+};
 
-    // create the request body
-    const body = {
+// Register user
+export const registerUser = async (firstName, lastName, email, phone, password) => {
+  if (USE_DUMMY_DATA) {
+    // In real usage, you should update the file manually or show a warning
+    console.warn('Register is disabled in dummy mode');
+    return { status: 'success' };
+  }
+
+  try {
+    const response = await axios.post(`${BASE_URL}/users/register`, {
       firstName,
       lastName,
       email,
       phone,
-      password,
-    }
-
-    // send the request and get the response from the server
-    const response = await axios.post(url, body)
-
-    if (response.status == 200) {
-      // read the json body from response
-      return response.data
-    } else {
-      // response is not success
-      return null
-    }
-  } catch (ex) {
-    console.log(`exception: `, ex)
+      password
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Register error:', error);
+    return null;
   }
-}
-
-export async function loginUser(email, password) {
-  try {
-    // create url
-    const url = `${config.serverURL}/user/login`
-
-    // create a body
-    const body = {
-      email,
-      password,
-    }
-
-    // call Post API
-    const response = await axios.post(url, body)
-
-    // check if response is OK
-    if (response.status == 200) {
-      // send the response body
-      return response.data
-    } else {
-      // send null result
-      return null
-    }
-  } catch (ex) {
-    console.log(`exception: `, ex)
-  }
-}
+};
