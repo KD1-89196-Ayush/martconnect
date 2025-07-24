@@ -2,10 +2,6 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/user';
-import React, { useState } from 'react'
-import { toast } from 'react-toastify'
-import { registerUser } from '../services/user'
-import { Link, useNavigate } from 'react-router-dom'
 
 function Register() {
   const [firstName, setFirstName] = useState('');

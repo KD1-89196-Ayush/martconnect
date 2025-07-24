@@ -1,0 +1,22 @@
+[
+  {
+    "order_id": 101,
+    "customer_id": 1,
+    "seller_id": 5,
+    "total_amount": 845.00,
+    "delivery_charge": 50.00,
+    "payment_status": "Paid",
+    "order_date": "2025-07-23T17:00:00",
+    "transaction_id": 901
+  },
+  {
+    "order_id": 102,
+    "customer_id": 2,
+    "seller_id": 5,
+    "total_amount": 430.00,
+    "delivery_charge": 30.00,
+    "payment_status": "Pending",
+    "order_date": "2025-07-24T11:30:00",
+    "transaction_id": 902
+  }
+]

@@ -32,10 +32,10 @@ function Header() {
             <Link className="nav-link" to="/seller-contact">Contact</Link>
           </li>
           <li className="nav-item">
-            <a className="nav-link" href="#">Add Products</a>
+            <Link className="nav-link" to="/add-product">Add Products</Link>
           </li>
           <li className="nav-item">
-            <a className="nav-link" href="#">Orders</a>
+            <Link className="nav-link" to="/order-details">Orders</Link>
           </li>
           <li className="nav-item">
             <button

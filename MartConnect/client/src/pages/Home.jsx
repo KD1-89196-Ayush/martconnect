@@ -7,7 +7,6 @@ function Home() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    // Fetch products from backend
     fetchProducts()
       .then(setProducts)
       .catch((err) => console.error("Failed to load products", err));

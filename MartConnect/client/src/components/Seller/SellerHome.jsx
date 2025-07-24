@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import Header from "../components/Seller/Header";
-import Footer from "../components/Seller/Footer";
-import { getProductsBySeller, deleteProductById } from "../services/sellerProductService";
+import Header from "./Header";
+import Footer from "./Footer";
+import {
+  getProductsBySeller,
+  deleteProductById,
+} from "../../services/sellerProductService";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function SellerHome() {
   const location = useLocation();
   const [products, setProducts] = useState([]);
 
   // Get seller from navigation or session
-  const seller = location.state?.seller || JSON.parse(sessionStorage.getItem("seller")) || {
-    seller_id: -1,
-    first_name: "Seller",
-    shop_name: "Unknown Shop",
-  };
+  const seller = location.state?.seller ||
+    JSON.parse(sessionStorage.getItem("seller")) || {
+      seller_id: -1,
+      first_name: "Seller",
+      shop_name: "Unknown Shop",
+    };
 
   // Save seller to sessionStorage if passed from login
   useEffect(() => {
@@ -37,13 +42,16 @@ function SellerHome() {
     loadProducts();
   }, [seller.seller_id]);
 
-  const handleUpdate = (productId) => {
-    console.log("Update product:", productId);
-    // You can navigate to a form or open modal here
+  const navigate = useNavigate();
+
+  const handleUpdate = (product) => {
+    navigate("/update-product", { state: { product } }); // ✅ navigate with state
   };
 
   const handleDelete = async (productId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this product?");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this product?"
+    );
     if (!confirmDelete) return;
 
     try {
@@ -86,14 +94,17 @@ function SellerHome() {
                     <p className="fw-bold text-success">₹{product.price}</p>
 
                     <div className="d-flex justify-content-between align-items-end mt-auto">
-                      <span className="badge bg-secondary">{product.category}</span>
+                      <span className="badge bg-secondary">
+                        {product.category}
+                      </span>
                       <div className="d-flex gap-2">
                         <button
                           className="btn btn-sm btn-outline-primary"
-                          onClick={() => handleUpdate(product.product_id)}
+                          onClick={() => handleUpdate(product)}
                         >
                           Update
                         </button>
+
                         <button
                           className="btn btn-sm btn-outline-danger"
                           onClick={() => handleDelete(product.product_id)}
