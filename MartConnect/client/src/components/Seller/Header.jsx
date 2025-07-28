@@ -1,5 +1,8 @@
-import React from "react";
+
 import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+
+
 
 function Header() {
   const navigate = useNavigate();
@@ -12,6 +15,16 @@ function Header() {
     }
   };
 
+
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/seller-home?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+
   return (
     <header className="navbar navbar-expand-lg" style={{ backgroundColor: "#add8e6" }}>
       <div className="container justify-content-between">
@@ -19,6 +32,21 @@ function Header() {
         <Link className="navbar-brand fw-bold" to="/seller-home">
           MartConnect
         </Link>
+
+        <div className="d-flex align-items-center" style={{ flex: 1, justifyContent: "center" }}>
+          <input
+            type="text"
+            className="form-control me-2"
+            placeholder="Search products..."
+            style={{ maxWidth: "300px" }}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button className="btn btn-outline-dark" onClick={handleSearch}>
+            Search
+          </button>
+        </div>
+
 
         {/* Right: Navigation + Logout */}
         <ul className="navbar-nav flex-row gap-3 align-items-center">

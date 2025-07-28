@@ -7,11 +7,23 @@ import {
   deleteProductById,
 } from "../../services/sellerProductService";
 import { toast } from "react-toastify";
+<<<<<<< HEAD:MartConnect/client/src/components/Seller/SellerHome.jsx
 import { useNavigate } from "react-router-dom";
+=======
+import { useSearchParams } from "react-router-dom";
+
+>>>>>>> c55a0062c6a92872129c2994e0a04aeb43482e32:MartConnect/client/src/pages/SellerHome.jsx
 
 function SellerHome() {
   const location = useLocation();
   const [products, setProducts] = useState([]);
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("search")?.toLowerCase() || "";
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery)
+  );
+
 
   // Get seller from navigation or session
   const seller = location.state?.seller ||
@@ -78,8 +90,8 @@ function SellerHome() {
       <main className="flex-grow-1 container py-4">
         <h2 className="text-center mb-4">Your Products</h2>
         <div className="row row-cols-1 row-cols-md-3 g-4">
-          {products.length > 0 ? (
-            products.map((product) => (
+          {filteredProducts.length > 0 ? (
+            filteredProducts.map((product) => (
               <div className="col" key={product.product_id}>
                 <div className="card h-100 shadow-sm d-flex flex-column">
                   <img
