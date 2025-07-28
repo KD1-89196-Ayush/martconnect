@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../../StylingSheet/AddProduct.css";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -19,6 +19,8 @@ const UpdateProduct = () => {
   };
 
   const [product, setProduct] = useState(existingProduct);
+  const navigate = useNavigate();
+  const seller = JSON.parse(sessionStorage.getItem('seller')) || JSON.parse(localStorage.getItem('seller'));
 
   useEffect(() => {
     if (location?.state?.product) {
@@ -37,24 +39,32 @@ const UpdateProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const result = await updateProduct(product);
+    const updatedProduct = {
+      ...product,
+      seller_id: seller?.seller_id,
+      product_id: product.product_id || product.id // ensure product_id is present
+    };
+    console.log('Updating product:', updatedProduct);
+    if (!updatedProduct.product_id) {
+      alert('Product ID missing. Cannot update.');
+      return;
+    }
+    const result = await updateProduct(updatedProduct);
     if (result.success) {
       alert("Product updated successfully!");
-      console.log("Update result:", result.data || result.message);
+      navigate('/seller-home'); // Go back to product list
     } else {
       alert("Failed to update product: " + result.error);
     }
   };
 
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <div className="d-flex flex-column min-vh-100 bg-light">
       <Header />
-
-      <div
-        className="flex-grow-1 d-flex justify-content-center align-items-center bg-light"
-        style={{ minHeight: "calc(100vh - 130px)" }}
-      >
+      <main className="container flex-grow-1 py-5 d-flex flex-column align-items-center">
+        <button className="btn btn-secondary mb-3 align-self-start" onClick={() => navigate(-1)}>
+          Go Back
+        </button>
         <div className="card shadow p-4 w-100" style={{ maxWidth: "600px" }}>
           <h2 className="text-center mb-4">
             Update {product.name}{" "}
@@ -100,6 +110,18 @@ const UpdateProduct = () => {
                 <option value="Liter">Liter</option>
                 <option value="Quantity">Quantity</option>
               </select>
+            </div>
+            <div className="mb-3">
+              <input
+                type="number"
+                name="quantity"
+                className="form-control"
+                placeholder="Quantity"
+                value={product.quantity || ''}
+                onChange={handleInputChange}
+                min={1}
+                required
+              />
             </div>
 
             <div className="mb-3">
@@ -156,8 +178,7 @@ const UpdateProduct = () => {
             </button>
           </form>
         </div>
-      </div>
-
+      </main>
       <Footer />
     </div>
   );

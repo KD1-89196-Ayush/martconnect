@@ -1,40 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { getAllProducts } from "../services/productService";
+import CustomerHeader from "./Header";
+import CustomerFooter from "./Footer";
+import { useNavigate } from "react-router-dom";
+import { getAllProducts } from "../../services/productService";
 import { toast } from "react-toastify";
-import { useNavigate, Link } from "react-router-dom";
+import sellerData from "../../sellerdata.json";
 
-function PublicHeader() {
-  return (
-    <header className="navbar navbar-expand-lg" style={{ backgroundColor: "#add8e6" }}>
-      <div className="container justify-content-between">
-        <span className="navbar-brand fw-bold">MartConnect</span>
-        <div className="ms-auto d-flex gap-2">
-          <Link className="btn btn-outline-primary" to="/login">Login</Link>
-          <Link className="btn btn-outline-secondary" to="/register">Register</Link>
-        </div>
-      </div>
-    </header>
-  );
-}
+function CustomerHome() {
+  const [products, setProducts] = useState([]); //All product from db/json 
+  const [search, setSearch] = useState(""); //search by product name
+  const [category, setCategory] = useState(""); //filter category as per selected category in category dropdown
+  const [categories, setCategories] = useState([]); //fetch categories from all product available product in setProduct
+  const navigate = useNavigate(); //
 
-function PublicFooter() {
-  return (
-    <footer className="text-center py-3" style={{ backgroundColor: "#add8e6" }}>
-      <div className="container">
-        <p className="mb-1">&copy; {new Date().getFullYear()} MartConnect</p>
-        <p className="mb-0">Empowering Sellers and Customers to Connect</p>
-      </div>
-    </footer>
-  );
-}
-
-function Home() {
-  const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [categories, setCategories] = useState([]);
-  const navigate = useNavigate();
-
+  // Fetch all products and categories
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -42,13 +21,29 @@ function Home() {
         setProducts(result);
         // Extract unique categories
         const uniqueCategories = Array.from(new Set(result.map(p => p.category)));
-        setCategories(uniqueCategories);
+        setCategories(uniqueCategories); //for category dropdown
       } catch (err) {
         toast.error("Failed to load products");
       }
     };
     loadProducts();
   }, []);
+
+  // Map seller_id to shop_name for quick lookup
+  const sellerIdToShopName = React.useMemo(() => {
+    const map = {};
+    sellerData.forEach(seller => {
+      map[seller.seller_id] = seller.shop_name;
+    });
+    return map;
+  }, []);
+
+  const handleAddToCart = (product) => {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.push({ ...product, quantity: 1 });
+    localStorage.setItem("cart", JSON.stringify(cart));
+    toast.success("Added to cart!");
+  };
 
   // Filter products by search and category
   const filteredProducts = products.filter(product => {
@@ -57,14 +52,9 @@ function Home() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleLoginRedirect = () => {
-    toast.info("Please login first");
-    setTimeout(() => navigate("/login"), 800);
-  };
-
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
-      <PublicHeader />
+      <CustomerHeader />
       <main className="flex-grow-1 container py-4">
         <h2 className="text-center mb-4">Shop Products</h2>
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
@@ -108,11 +98,14 @@ function Home() {
                     </div>
                     <button
                       className="btn btn-sm btn-outline-success mt-2 w-100"
-                      onClick={handleLoginRedirect}
+                      onClick={() => handleAddToCart(product)}
                       style={{ fontSize: '0.9rem', padding: '2px 0' }}
                     >
                       Add to Cart
                     </button>
+                    <div className="text-center mt-2">
+                      <small className="text-muted">Sold by: {sellerIdToShopName[product.seller_id] || "Unknown Seller"}</small>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -122,9 +115,9 @@ function Home() {
           )}
         </div>
       </main>
-      <PublicFooter />
+      <CustomerFooter />
     </div>
   );
 }
 
-export default Home;
+export default CustomerHome; 

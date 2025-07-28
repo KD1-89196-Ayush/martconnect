@@ -4,6 +4,7 @@ import Footer from "./Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../StylingSheet/AddProduct.css";
 import { addProduct } from "../../services/addProduct";
+import { useNavigate } from "react-router-dom";
 
 const AddProduct = () => {
   const [category, setCategory] = useState("");
@@ -15,6 +16,9 @@ const AddProduct = () => {
     inStock: "",
     image: null,
   });
+
+  const navigate = useNavigate();
+  const seller = JSON.parse(sessionStorage.getItem('seller')) || JSON.parse(localStorage.getItem('seller'));
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +35,7 @@ const AddProduct = () => {
     const productData = {
       ...product,
       category,
+      seller_id: seller?.seller_id
     };
 
     const result = await addProduct(productData);
@@ -55,7 +60,10 @@ const AddProduct = () => {
     <div className="d-flex flex-column min-vh-100 bg-light">
       <Header />
 
-      <main className="container flex-grow-1 py-5 d-flex justify-content-center align-items-center">
+      <main className="container flex-grow-1 py-5 d-flex flex-column align-items-center">
+        <button className="btn btn-secondary mb-3 align-self-start" onClick={() => navigate(-1)}>
+          Go Back
+        </button>
         <div className="card shadow p-4 w-100" style={{ maxWidth: "600px" }}>
           <h2 className="text-center mb-4">Add a Product to the Shop</h2>
 
@@ -123,6 +131,18 @@ const AddProduct = () => {
                     <option value="Liter">Liter</option>
                     <option value="Quantity">Quantity</option>
                   </select>
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="number"
+                    name="quantity"
+                    className="form-control"
+                    placeholder="Quantity"
+                    value={product.quantity || ''}
+                    onChange={handleInputChange}
+                    min={1}
+                    required
+                  />
                 </div>
 
                 <div className="mb-3">

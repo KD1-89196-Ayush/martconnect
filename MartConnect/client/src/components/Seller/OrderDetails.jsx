@@ -3,9 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SellerHeader from "./Header";
 import Footer from "./Footer";
 import { getAllOrders } from "../../services/orderDetails";
-import orderItemsData from "../../order_items.json";
-import products from "../../data.json";
-import customers from "../../customers.json";
+
+const USE_JSON = true; // Set to false for backend
 
 const OrderDetail = () => {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const seller = JSON.parse(localStorage.getItem("seller"));
+    const seller = JSON.parse(sessionStorage.getItem('seller')) || JSON.parse(localStorage.getItem('seller'));
     if (!seller) {
       alert("Seller not logged in.");
       navigate("/login", { state: { role: "Seller" } });
@@ -30,24 +29,31 @@ const OrderDetail = () => {
         alert("Failed to load orders: " + (res?.error || "Unknown error"));
         return;
       }
-
       const allOrders = Array.isArray(res.data) ? res.data : res.data?.default;
-
-      console.log("Order ID from state:", orderId);
-      console.log("Seller from localStorage:", seller);
-      console.log("Orders received:", allOrders);
-
       if (!Array.isArray(allOrders)) {
         alert("Orders data is not in expected array format.");
         return;
       }
-
       const selectedOrder = allOrders.find(
         o => Number(o.order_id) === orderId && Number(o.seller_id) === Number(seller.seller_id)
       );
       if (!selectedOrder) {
         alert("Order not found for this seller.");
         return;
+      }
+
+      let customers = [];
+      let orderItemsData = [];
+      let products = [];
+      if (USE_JSON) {
+        customers = (await import("../../customers.json")).default;
+        orderItemsData = (await import("../../order_items.json")).default;
+        products = (await import("../../data.json")).default;
+      } else {
+        // Fetch from backend if needed
+        // customers = await fetchCustomersFromBackend();
+        // orderItemsData = await fetchOrderItemsFromBackend();
+        // products = await fetchProductsFromBackend();
       }
 
       const cust = customers.find(c => Number(c.customer_id) === Number(selectedOrder.customer_id));

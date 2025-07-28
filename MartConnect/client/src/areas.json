@@ -1,0 +1,30 @@
+[
+  {
+    "pincode": "411005",
+    "area_name": "Shivaji Nagar",
+    "city": "Pune",
+    "state": "Maharashtra",
+    "customer_id": 1
+  },
+  {
+    "pincode": "400004",
+    "area_name": "Charni Road",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "customer_id": 2
+  },
+  {
+    "pincode": "440017",
+    "area_name": "Indora",
+    "city": "Nagpur",
+    "state": "Maharashtra",
+    "customer_id": 3
+  },
+  {
+    "pincode": "422001",
+    "area_name": "MG Road",
+    "city": "Nashik",
+    "state": "Maharashtra",
+    "customer_id": 4
+  }
+] 

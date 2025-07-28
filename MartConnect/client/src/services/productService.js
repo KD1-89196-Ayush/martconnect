@@ -2,11 +2,23 @@ import axios from "axios";
 import productData from "../data.json"; // fallback dummy data
 
 const BASE_URL = "http://localhost:8080/api";
-const USE_BACKEND = false; // set to true when backend is ready
+const USE_JSON = true; // Toggle to true for local JSON, false for backend
 
 // Fetch products
 export const fetchProducts = async () => {
-  if (USE_BACKEND) {
+  if (USE_JSON) {
+    let products = JSON.parse(localStorage.getItem('products'));
+    if (!products) {
+      // Simulate API delay for JSON
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(productData), 300);
+      });
+    } else {
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(products), 300);
+      });
+    }
+  } else {
     try {
       const response = await axios.get(`${BASE_URL}/products`);
       return response.data;
@@ -14,17 +26,12 @@ export const fetchProducts = async () => {
       console.error("Error fetching products:", error);
       throw error;
     }
-  } else {
-    // Simulate API delay for JSON
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(productData), 300);
-    });
   }
 };
 
 // Add to Cart (requires backend)
 export const addToCart = async (productId, userId) => {
-  if (!USE_BACKEND) {
+  if (USE_JSON) {
     console.log(`[DEV] Simulate addToCart: productId=${productId}, userId=${userId}`);
     return { success: true };
   }
@@ -42,7 +49,7 @@ export const addToCart = async (productId, userId) => {
 
 // Buy Now (requires backend)
 export const buyNow = async (productId, userId) => {
-  if (!USE_BACKEND) {
+  if (USE_JSON) {
     console.log(`[DEV] Simulate buyNow: productId=${productId}, userId=${userId}`);
     return { success: true };
   }
@@ -57,3 +64,5 @@ export const buyNow = async (productId, userId) => {
     throw error;
   }
 };
+
+export const getAllProducts = fetchProducts;

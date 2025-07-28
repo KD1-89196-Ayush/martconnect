@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import SellerHeader from "./Header";
 import Footer from "./Footer";
 import { getAllOrders } from "../../services/orderDetails";
-import orders from "../../orders.json";
-import orderItemsData from "../../order_items.json";
-import products from "../../data.json";
-import customers from "../../customers.json";
+
+const USE_JSON = true; // Set to false for backend
 
 const OrderDetail = () => {
   const navigate = useNavigate();
@@ -16,9 +14,13 @@ const OrderDetail = () => {
   const [orderItems, setOrderItems] = useState([]);
   const [orderCustomerName, setOrderCustomerName] = useState("Customer");
   const [loading, setLoading] = useState(true);
+  const [allSellerOrders, setAllSellerOrders] = useState([]);
+  const [showOrderList, setShowOrderList] = useState(false);
+  const [detailedOrders, setDetailedOrders] = useState([]);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   useEffect(() => {
-    const seller = JSON.parse(localStorage.getItem("seller"));
+    const seller = JSON.parse(sessionStorage.getItem('seller')) || JSON.parse(localStorage.getItem('seller'));
     if (!seller) {
       alert("Seller not logged in.");
       navigate("/login", { state: { role: "Seller" } });
@@ -32,41 +34,39 @@ const OrderDetail = () => {
         return;
       }
       const allOrders = res.data;
-
-      console.log("Order ID from state:", orderId);
-      console.log("Seller from localStorage:", seller);
-      console.log("Orders received:", allOrders);
-
-      const selectedOrder = allOrders.find(
-        o => Number(o.order_id) === orderId && Number(o.seller_id) === Number(seller.seller_id)
-      );
-      if (!selectedOrder) {
-        alert("Order not found for this seller.");
-        return;
+      // Only show orders for this seller
+      const sellerOrders = allOrders.filter(o => Number(o.seller_id) === Number(seller.seller_id));
+      let customers = [];
+      let orderItemsData = [];
+      let products = [];
+      if (USE_JSON) {
+        customers = (await import("../../customers.json")).default;
+        orderItemsData = (await import("../../order_items.json")).default;
+        products = (await import("../../data.json")).default;
+      } else {
+        // Fetch from backend if needed
       }
-
-      const cust = customers.find(c => Number(c.customer_id) === Number(selectedOrder.customer_id));
-      setOrderCustomerName(
-        cust ? `${cust.first_name} ${cust.last_name}` : "Customer"
-      );
-
-      const items = orderItemsData
-        .filter(item => Number(item.order_id) === orderId)
-        .map(item => {
-          const prod = products.find(p => Number(p.product_id) === Number(item.product_id));
-          return {
-            product_id: item.product_id,
-            name: prod?.name || "Product",
-            price: item.price_per_unit,
-            quantity: item.quantity,
-            packed: false
-          };
-        });
-
-      setOrderItems(items);
+      const detailed = sellerOrders.map(order => {
+        const customer = customers.find(c => Number(c.customer_id) === Number(order.customer_id));
+        const items = orderItemsData
+          .filter(item => Number(item.order_id) === order.order_id)
+          .map(item => {
+            const product = products.find(p => Number(p.product_id) === Number(item.product_id));
+            return {
+              ...item,
+              product_name: product ? product.name : 'Unknown Product',
+              price: item.price_per_unit,
+            };
+          });
+        return {
+          ...order,
+          customer,
+          items,
+        };
+      });
+      setDetailedOrders(detailed);
       setLoading(false);
     }
-
     load();
   }, [orderId, navigate]);
 
@@ -90,6 +90,81 @@ const OrderDetail = () => {
 
   if (loading) {
     return <><SellerHeader /><div className="container mt-5 text-center">Loading Order...</div><Footer /></>;
+  }
+  if (showOrderList) {
+    return (
+      <div className="d-flex flex-column min-vh-100">
+        <SellerHeader />
+        <div className="container flex-grow-1 mt-5 mb-5">
+          <h3 className="mb-4">All Orders for You</h3>
+          {detailedOrders.length === 0 ? (
+            <p>No orders found for this seller.</p>
+          ) : (
+            <table className="table table-bordered table-hover">
+              <thead className="table-light">
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detailedOrders.map(order => (
+                  <>
+                  <tr key={order.order_id}>
+                    <td>{order.order_id}</td>
+                    <td>{order.customer ? `${order.customer.first_name} ${order.customer.last_name}` : 'Unknown'}</td>
+                    <td>{order.order_date}</td>
+                    <td>{order.payment_status}</td>
+                    <td>₹{order.total_amount}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => setExpandedOrderId(expandedOrderId === order.order_id ? null : order.order_id)}
+                      >
+                        {expandedOrderId === order.order_id ? 'Hide' : 'View'} Items
+                      </button>
+                    </td>
+                  </tr>
+                  {expandedOrderId === order.order_id && (
+                    <tr>
+                      <td colSpan={6}>
+                        <b>Order Items:</b>
+                        <table className="table table-sm mt-2">
+                          <thead>
+                            <tr>
+                              <th>Product</th>
+                              <th>Qty</th>
+                              <th>Price</th>
+                              <th>Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {order.items.map(item => (
+                              <tr key={item.order_item_id}>
+                                <td>{item.product_name}</td>
+                                <td>{item.quantity}</td>
+                                <td>₹{item.price}</td>
+                                <td>₹{item.price * item.quantity}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (

@@ -11,9 +11,19 @@ import SellerContact from './components/Seller/contact';
 import AddProduct from './components/Seller/AddProduct';
 import UpdateProduct from './components/Seller/UpdateProduct';
 import ProductOrder from "./components/Seller/ProductOrder";
+import SellerProfile from './components/Seller/Profile';
 
 import { AuthContext } from './contexts/auth.context';
 import { ToastContainer } from 'react-toastify';
+import { CustomerHome, CustomerAbout, CustomerContact, CustomerOrders, Cart, CustomerProfile } from './components/customers';
+
+function CustomerProtectedRoute({ children }) {
+  const user = React.useContext(AuthContext).user;
+  if (!user || user.role !== 'User') {
+    return <Navigate to="/login" state={{ role: 'Customer' }} />;
+  }
+  return children;
+}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -68,6 +78,60 @@ function App() {
           <Route
             path="/order-details"
             element={user ? <ProductOrder /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+          />
+          <Route
+            path="/seller-profile"
+            element={user ? <SellerProfile /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+          />
+
+          {/* Customer Protected Routes */}
+          <Route
+            path="/customer-home"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerHome />
+              </CustomerProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-about"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerAbout />
+              </CustomerProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-contact"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerContact />
+              </CustomerProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-orders"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerOrders />
+              </CustomerProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <CustomerProtectedRoute>
+                <Cart />
+              </CustomerProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-profile"
+            element={
+              <CustomerProtectedRoute>
+                <CustomerProfile />
+              </CustomerProtectedRoute>
+            }
           />
         </Routes>
       </AuthContext.Provider>

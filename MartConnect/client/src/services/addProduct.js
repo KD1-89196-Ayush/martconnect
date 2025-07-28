@@ -1,8 +1,11 @@
-const USE_JSON = false; // true = local JSON mode, false = backend mode
+const USE_JSON = true; // true = local JSON mode, false = backend mode
 
 export const addProduct = async (productData) => {
   if (USE_JSON) {
-    console.log("Simulating product add in JSON mode:", productData);
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    productData.product_id = products.length ? Math.max(...products.map(p => p.product_id)) + 1 : 1;
+    products.push(productData);
+    localStorage.setItem('products', JSON.stringify(products));
     return { success: true, message: "Product added locally." };
   } else {
     try {
