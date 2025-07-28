@@ -34,8 +34,11 @@ function Login() {
             email: seller.email,
           };
 
+          // Store in localStorage
           setUser(sellerUser);
           localStorage.setItem('user', JSON.stringify(sellerUser));
+          localStorage.setItem('seller', JSON.stringify(sellerUser)); 
+
           toast.success(`Welcome ${seller.first_name}`);
           navigate('/seller-home', { state: { seller: sellerUser } });
         } else {

@@ -1,203 +1,161 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import SellerHeader from "./Header";
+import Footer from "./Footer";
+import { getAllOrders } from "../../services/orderDetails";
+import orders from "../../orders.json";
+import orderItemsData from "../../order_items.json";
+import products from "../../data.json";
+import customers from "../../customers.json";
 
-const Orders = () => {
-    const navigate = useNavigate();
+const OrderDetail = () => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const orderId = Number(state?.orderId);
 
-    const dummyOrders = [
-        {
-            id: 1,
-            customerName: "Rahul Patil",
-            total: 400,
-            isPaid: false,
-            status: "Pending",
-            date: "2025-07-20",
-            orderItems: [
-                { name: "Wheat", quantity: 4, unit: "Kg" },
-                { name: "Lux Soap", quantity: 4, unit: "" },
-            ],
-        },
-        {
-            id: 2,
-            customerName: "Pradeep Patil",
-            total: 280,
-            isPaid: true,
-            status: "Delivered",
-            date: "2025-07-22",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
+  const [orderItems, setOrderItems] = useState([]);
+  const [orderCustomerName, setOrderCustomerName] = useState("Customer");
+  const [loading, setLoading] = useState(true);
 
-        {
-            id: 3,
-            customerName: "Amit Patil",
-            total: 580,
-            isPaid: true,
-            status: "Delivered",
-            date: "2025-07-21",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
+  useEffect(() => {
+    const seller = JSON.parse(localStorage.getItem("seller"));
+    if (!seller) {
+      alert("Seller not logged in.");
+      navigate("/login", { state: { role: "Seller" } });
+      return;
+    }
 
-        {
-            id: 4,
-            customerName: "Raj Patil",
-            total: 580,
-            isPaid: true,
-            status: "Delivered",
-            date: "2025-07-28",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
+    async function load() {
+      const res = await getAllOrders();
+      if (!res.success) {
+        alert("Failed to load orders: " + res.error);
+        return;
+      }
+      const allOrders = res.data;
 
+      console.log("Order ID from state:", orderId);
+      console.log("Seller from localStorage:", seller);
+      console.log("Orders received:", allOrders);
 
-        {
-            id: 5,
-            customerName: "Tanu Patil",
-            total: 580,
-            isPaid: true,
-            status: "Delivered",
-            date: "2025-07-19",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
+      const selectedOrder = allOrders.find(
+        o => Number(o.order_id) === orderId && Number(o.seller_id) === Number(seller.seller_id)
+      );
+      if (!selectedOrder) {
+        alert("Order not found for this seller.");
+        return;
+      }
 
+      const cust = customers.find(c => Number(c.customer_id) === Number(selectedOrder.customer_id));
+      setOrderCustomerName(
+        cust ? `${cust.first_name} ${cust.last_name}` : "Customer"
+      );
 
-        {
-            id: 6,
-            customerName: "Shubh Patil",
-            total: 580,
-            isPaid: true,
-            status: "Delivered",
-            date: "2025-07-29",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
+      const items = orderItemsData
+        .filter(item => Number(item.order_id) === orderId)
+        .map(item => {
+          const prod = products.find(p => Number(p.product_id) === Number(item.product_id));
+          return {
+            product_id: item.product_id,
+            name: prod?.name || "Product",
+            price: item.price_per_unit,
+            quantity: item.quantity,
+            packed: false
+          };
+        });
 
+      setOrderItems(items);
+      setLoading(false);
+    }
 
-        {
-            id: 7,
-            customerName: "Raj Patil",
-            total: 580,
-            isPaid: false,
-            status: "Delivered",
-            date: "2025-07-02",
-            orderItems: [
-                { name: "Sugar", quantity: 2, unit: "Kg" },
-                { name: "Toothpaste", quantity: 1, unit: "" },
-            ],
-        },
-    ];
+    load();
+  }, [orderId, navigate]);
 
-    const [searchText, setSearchText] = useState("");
-    const [filteredOrders, setFilteredOrders] = useState(dummyOrders);
+  const handlePriceChange = (index, value) => {
+    const newItems = [...orderItems];
+    newItems[index].price = Number(value);
+    setOrderItems(newItems);
+  };
 
-    const handleSearch = () => {
-        const filtered = dummyOrders.filter((order) =>
-            order.customerName.toLowerCase().includes(searchText.toLowerCase())
-        );
-        setFilteredOrders(filtered);
-    };
+  const handleQuantityChange = (index, value) => {
+    const newItems = [...orderItems];
+    newItems[index].quantity = Number(value);
+    setOrderItems(newItems);
+  };
 
-    // Sort orders based on most recent date
-    const handleRecentOrders = () => {
-        const sorted = [...dummyOrders].sort((a, b) => new Date(b.date) - new Date(a.date));
-        setFilteredOrders(sorted);
-    };
+  const handlePackChange = (index, checked) => {
+    const newItems = [...orderItems];
+    newItems[index].packed = checked;
+    setOrderItems(newItems);
+  };
 
-    // Filter only pending orders
-    const handlePendingOrders = () => {
-        const filtered = dummyOrders.filter((order) => order.status.toLowerCase() === "pending");
-        setFilteredOrders(filtered);
-    };
+  if (loading) {
+    return <><SellerHeader /><div className="container mt-5 text-center">Loading Order...</div><Footer /></>;
+  }
 
-    // Filter only paid orders
-    const handlePaidOrders = () => {
-        const filtered = dummyOrders.filter((order) => order.isPaid === true);
-        setFilteredOrders(filtered);
-    };
+  return (
+    <div className="d-flex flex-column min-vh-100">
+      <SellerHeader />
+      <div className="container flex-grow-1 mt-5 mb-5" style={{ maxWidth: "1000px" }}>
+        <h3 className="text-center mb-4">Order Details for {orderCustomerName}</h3>
 
+        <table className="table table-bordered table-hover">
+          <thead className="table-primary text-center">
+            <tr>
+              <th>Sr.</th>
+              <th>Product ID</th>
+              <th>Name</th>
+              <th>Price (₹)</th>
+              <th>Qty</th>
+              <th>Total (₹)</th>
+              <th>Packed?</th>
+            </tr>
+          </thead>
+          <tbody className="text-center">
+            {orderItems.map((item, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>{item.product_id}</td>
+                <td>{item.name}</td>
+                <td>
+                  <input
+                    type="number"
+                    value={item.price}
+                    onChange={e => handlePriceChange(i, e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: "80px" }}
+                  />
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    value={item.quantity}
+                    onChange={e => handleQuantityChange(i, e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: "80px" }}
+                  />
+                </td>
+                <td>{(item.price * item.quantity).toFixed(2)}</td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={item.packed}
+                    onChange={e => handlePackChange(i, e.target.checked)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-    const handleOrderDetails = (order) => {
-        navigate("/orderDetails", { state: { order } });
-    };
+        <h5 className="text-end mt-4">Total Bill: ₹{orderItems.reduce((s, it) => s + it.price * it.quantity, 0).toFixed(2)}</h5>
 
-    return (
-        <div className="container mt-1" style={{ maxWidth: "1000px", marginBottom:"100px", marginLeft: "40vh"}}>
-            <h3 className="text-center mb-10" >Orders</h3>
-
-            {/* Search bar */}
-            {/* Search bar and filter buttons */}
-            <div className="mb-3 d-flex gap-2" >
-                <input
-                    type="text"
-                    placeholder="Search by customer name..."
-                    className="form-control"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                />
-                <button className="btn btn-primary" onClick={handleSearch}>Search</button>
-                <button className="btn btn-success" onClick={handleRecentOrders}>Recent </button>
-                <button className="btn btn-warning" onClick={handlePendingOrders}>Pending </button>
-                <button className="btn btn-info" onClick={handlePaidOrders}>Paid</button>
-            </div>
-
-
-
-            {/* Orders Table */}
-            <table className="table table-bordered">
-                <thead className="table-dark">
-                    <tr>
-                        <th>Sr.No</th>
-                        <th>Customer Name</th>
-                        <th>Order Details</th>
-                        <th>Total Bill</th>
-                        <th>Payment Status</th>
-                        <th>Order Status</th>
-                        <th>Order Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredOrders.map((order, index) => (
-                        <tr key={order.id}>
-                            <td>{index + 1}</td>
-                            <td>{order.customerName}</td>
-                            <td>
-                                <button
-                                    className="btn btn-outline-info btn-sm"
-                                    onClick={() => handleOrderDetails(order)}
-                                >
-                                    Order List
-                                </button>
-                            </td>
-                            <td>₹{order.total}</td>
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    checked={order.isPaid}
-                                    readOnly
-                                />{" "}
-                                {order.isPaid ? "Paid" : "Pending"}
-                            </td>
-                            <td>{order.status}</td>
-                            <td>{order.date}</td>
-                        </tr>
-                    ))}
-                </tbody>
-
-            </table>
+        <div className="text-center mt-3">
+          <button onClick={() => navigate(-1)} className="btn btn-secondary">Back</button>
         </div>
-    );
+      </div>
+      <Footer />
+    </div>
+  );
 };
 
-export default Orders;
+export default OrderDetail;

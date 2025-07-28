@@ -10,7 +10,7 @@ import About from './components/Seller/About';
 import SellerContact from './components/Seller/contact';
 import AddProduct from './components/Seller/AddProduct';
 import UpdateProduct from './components/Seller/UpdateProduct';
-import OrderDetail from './components/Seller/OrderDetails';
+import ProductOrder from "./components/Seller/ProductOrder";
 
 import { AuthContext } from './contexts/auth.context';
 import { ToastContainer } from 'react-toastify';
@@ -67,7 +67,7 @@ function App() {
           />
           <Route
             path="/order-details"
-            element={user ? <OrderDetail /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+            element={user ? <ProductOrder /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
           />
         </Routes>
       </AuthContext.Provider>
