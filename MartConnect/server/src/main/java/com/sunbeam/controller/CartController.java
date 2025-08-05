@@ -1,13 +1,11 @@
 package com.sunbeam.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,138 +13,93 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sunbeam.dto.ApiResponse;
-import com.sunbeam.entities.Cart;
+import com.sunbeam.dto.CartDto;
 import com.sunbeam.service.CartService;
 
 @RestController
 @RequestMapping("/api/cart")
-@CrossOrigin(origins = "*")
 public class CartController {
     
     @Autowired
     private CartService cartService;
     
-    @PostMapping
-    public ResponseEntity<ApiResponse> addToCart(@RequestBody Map<String, Object> request) {
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<CartDto>> getCustomerCart(@PathVariable Integer customerId) {
         try {
-            Integer customerId = (Integer) request.get("customerId");
-            Integer productId = (Integer) request.get("productId");
-            Integer quantity = (Integer) request.get("quantity");
-            
-            if (customerId == null || productId == null || quantity == null) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("customerId, productId, and quantity are required"));
-            }
-            
-            Cart cartItem = cartService.addToCart(customerId, productId, quantity);
-            return ResponseEntity.ok(ApiResponse.success("Item added to cart successfully", cartItem));
-            
+            List<CartDto> cartItems = cartService.findByCustomer(customerId);
+            return ResponseEntity.ok(cartItems);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to add item to cart: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
-    @GetMapping("/customer/{customerId}")
-    public ResponseEntity<ApiResponse> getCustomerCart(@PathVariable Integer customerId) {
+    @PostMapping
+    public ResponseEntity<CartDto> addToCart(@RequestBody Map<String, Object> request) {
         try {
-            List<Cart> cartItems = cartService.findByCustomer(customerId);
-            BigDecimal total = cartService.getCustomerCartTotal(customerId);
-            long itemCount = cartService.getCustomerCartItemCount(customerId);
+            System.out.println("Received cart request: " + request);
             
-            Map<String, Object> cartData = Map.of(
-                "items", cartItems,
-                "total", total,
-                "itemCount", itemCount
-            );
+            // Extract cart data from request
+            Integer productId = (Integer) request.get("productId");
+            Integer customerId = (Integer) request.get("customerId");
+            Integer quantity = (Integer) request.get("quantity");
             
-            return ResponseEntity.ok(ApiResponse.success("Cart retrieved successfully", cartData));
+            if (productId == null || customerId == null || quantity == null) {
+                return ResponseEntity.badRequest().build();
+            }
             
+            // Create cart DTO
+            CartDto cartDto = new CartDto();
+            cartDto.setProductId(productId);
+            cartDto.setCustomerId(customerId);
+            cartDto.setQuantity(quantity);
+            
+            CartDto addedCartItem = cartService.addToCart(cartDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(addedCartItem);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve cart: " + e.getMessage()));
+            System.err.println("Error adding to cart: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
     
     @PutMapping("/{cartId}/quantity")
-    public ResponseEntity<ApiResponse> updateQuantity(
-            @PathVariable Integer cartId,
-            @RequestParam Integer newQuantity) {
+    public ResponseEntity<CartDto> updateQuantity(@PathVariable Integer cartId, @RequestBody Map<String, Object> request) {
         try {
-            Cart updatedCart = cartService.updateCartItemQuantity(cartId, newQuantity);
-            return ResponseEntity.ok(ApiResponse.success("Quantity updated successfully", updatedCart));
+            Integer newQuantity = (Integer) request.get("quantity");
+            if (newQuantity == null) {
+                return ResponseEntity.badRequest().build();
+            }
             
+            CartDto updatedCartItem = cartService.updateQuantity(cartId, newQuantity);
+            if (updatedCartItem == null) {
+                // Item was removed due to quantity <= 0
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(updatedCartItem);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to update quantity: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
     
     @DeleteMapping("/{cartId}")
-    public ResponseEntity<ApiResponse> removeFromCart(@PathVariable Integer cartId) {
+    public ResponseEntity<Void> removeFromCart(@PathVariable Integer cartId) {
         try {
             cartService.removeFromCart(cartId);
-            return ResponseEntity.ok(ApiResponse.success("Item removed from cart successfully"));
-            
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to remove item from cart: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
     
-    @DeleteMapping("/customer/{customerId}/clear")
-    public ResponseEntity<ApiResponse> clearCustomerCart(@PathVariable Integer customerId) {
+    @DeleteMapping("/customer/{customerId}")
+    public ResponseEntity<Void> clearCustomerCart(@PathVariable Integer customerId) {
         try {
             cartService.clearCustomerCart(customerId);
-            return ResponseEntity.ok(ApiResponse.success("Cart cleared successfully"));
-            
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to clear cart: " + e.getMessage()));
-        }
-    }
-    
-    @GetMapping("/customer/{customerId}/summary")
-    public ResponseEntity<ApiResponse> getCartSummary(@PathVariable Integer customerId) {
-        try {
-            List<Cart> cartItems = cartService.findByCustomer(customerId);
-            BigDecimal total = cartService.getCustomerCartTotal(customerId);
-            long itemCount = cartService.getCustomerCartItemCount(customerId);
-            
-            Map<String, Object> summary = Map.of(
-                "itemCount", itemCount,
-                "total", total,
-                "items", cartItems
-            );
-            
-            return ResponseEntity.ok(ApiResponse.success("Cart summary retrieved", summary));
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve cart summary: " + e.getMessage()));
-        }
-    }
-    
-    @GetMapping("/customer/{customerId}/validate")
-    public ResponseEntity<ApiResponse> validateCartItems(@PathVariable Integer customerId) {
-        try {
-            List<Cart> cartItems = cartService.findCartItemsWithLowStock();
-            List<Cart> customerLowStockItems = cartService.findCartItemsByCustomerWithLowStock(customerId);
-            
-            if (customerLowStockItems.isEmpty()) {
-                return ResponseEntity.ok(ApiResponse.success("Cart items are valid"));
-            } else {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Some items in cart have insufficient stock"));
-            }
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to validate cart: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 } 
