@@ -1,128 +1,77 @@
 package com.sunbeam.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.sunbeam.entities.Seller;
+import com.sunbeam.dto.SellerDto;
 
 /**
  * Service interface for Seller entity operations
  */
-public interface SellerService extends BaseService<Seller, Integer> {
+public interface SellerService extends BaseService<SellerDto, Integer> {
     
     /**
-     * Find seller by email
+     * Register new seller
      */
-    Optional<Seller> findByEmail(String email);
-    
-    /**
-     * Find seller by phone number
-     */
-    Optional<Seller> findByPhone(String phone);
-    
-    /**
-     * Find sellers by first name
-     */
-    List<Seller> findByFirstName(String firstName);
-    
-    /**
-     * Find sellers by last name
-     */
-    List<Seller> findByLastName(String lastName);
-    
-    /**
-     * Find sellers by shop name
-     */
-    List<Seller> findByShopName(String shopName);
-    
-    /**
-     * Find sellers by first name, last name, or shop name containing search term
-     */
-    List<Seller> findByFirstNameOrLastNameOrShopNameContaining(String searchTerm);
-    
-    /**
-     * Check if seller exists by email
-     */
-    boolean existsByEmail(String email);
-    
-    /**
-     * Check if seller exists by phone
-     */
-    boolean existsByPhone(String phone);
-    
-    /**
-     * Check if seller exists by shop name
-     */
-    boolean existsByShopName(String shopName);
-    
-    /**
-     * Find sellers by city
-     */
-    List<Seller> findByCity(String city);
-    
-    /**
-     * Find sellers by state
-     */
-    List<Seller> findByState(String state);
-    
-    /**
-     * Count total sellers
-     */
-    long countTotalSellers();
-    
-    /**
-     * Find sellers created in a specific date range
-     */
-    List<Seller> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
-    /**
-     * Register a new seller
-     */
-    Seller registerSeller(Seller seller);
-    
-    /**
-     * Update seller profile
-     */
-    Seller updateSellerProfile(Integer sellerId, Seller seller);
-    
-    /**
-     * Change seller password
-     */
-    boolean changePassword(Integer sellerId, String oldPassword, String newPassword);
+    SellerDto registerSeller(SellerDto sellerDto);
     
     /**
      * Authenticate seller
      */
-    Optional<Seller> authenticate(String email, String password);
+    SellerDto authenticate(String email, String password);
     
     /**
-     * Get seller statistics
+     * Find seller by email
      */
-    Object[] getSellerStatistics(Integer sellerId);
+    Optional<SellerDto> findByEmail(String email);
     
     /**
-     * Get top sellers by product count
+     * Check if email exists
      */
-    List<Object[]> getTopSellersByProductCount(int limit);
+    boolean existsByEmail(String email);
     
     /**
-     * Get top sellers by order count
+     * Find sellers by first name
      */
-    List<Object[]> getTopSellersByOrderCount(int limit);
+    List<SellerDto> findByFirstName(String firstName);
     
     /**
-     * Get top sellers by revenue
+     * Find sellers by last name
      */
-    List<Object[]> getTopSellersByRevenue(int limit);
+    List<SellerDto> findByLastName(String lastName);
     
     /**
-     * Get sellers with low stock products
+     * Find sellers by phone
      */
-    List<Seller> getSellersWithLowStockProducts(Integer lowStockThreshold);
+    List<SellerDto> findByPhone(String phone);
     
     /**
-     * Get sellers with out of stock products
+     * Find sellers by shop name
      */
-    List<Seller> getSellersWithOutOfStockProducts();
+    List<SellerDto> findByShopName(String shopName);
+    
+    /**
+     * Find sellers by shop address containing
+     */
+    List<SellerDto> findByShopAddressContaining(String shopAddress);
+    
+    /**
+     * Count sellers by first name
+     */
+    long countByFirstName(String firstName);
+    
+    /**
+     * Count sellers by last name
+     */
+    long countByLastName(String lastName);
+    
+    /**
+     * Count sellers by phone
+     */
+    long countByPhone(String phone);
+    
+    /**
+     * Count sellers by shop name
+     */
+    long countByShopName(String shopName);
 } 

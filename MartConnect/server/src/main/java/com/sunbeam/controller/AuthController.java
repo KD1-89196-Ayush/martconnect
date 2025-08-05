@@ -1,27 +1,32 @@
 package com.sunbeam.controller;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sunbeam.dto.ApiResponse;
-import com.sunbeam.dto.LoginDto;
-import com.sunbeam.entities.Customer;
-import com.sunbeam.entities.Seller;
+import com.sunbeam.dto.AuthResp;
+import com.sunbeam.dto.CustomerDto;
+import com.sunbeam.dto.SellerDto;
+import com.sunbeam.dto.SignInDTO;
+import com.sunbeam.security.JwtUtils;
 import com.sunbeam.service.CustomerService;
 import com.sunbeam.service.SellerService;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "*")
 public class AuthController {
     
     @Autowired
@@ -30,90 +35,131 @@ public class AuthController {
     @Autowired
     private SellerService sellerService;
     
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private JwtUtils jwtUtils;
+    
+    @Autowired
+    private UserDetailsService userDetailsService;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<AuthResp> login(@RequestBody SignInDTO signInDTO) {
         try {
-            if ("Seller".equals(loginDto.getRole())) {
-                // Seller login
-                var sellerOpt = sellerService.authenticate(loginDto.getEmail(), loginDto.getPassword());
-                if (sellerOpt.isPresent()) {
-                    Seller seller = sellerOpt.get();
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("firstName", seller.getFirstName());
-                    data.put("lastName", seller.getLastName());
-                    data.put("token", "seller-token-" + seller.getSellerId());
-                    data.put("seller_id", seller.getSellerId());
-                    data.put("email", seller.getEmail());
-                    data.put("role", "Seller");
-                    data.put("shop_name", seller.getShopName());
-                    data.put("shop_address", seller.getShopAddress());
-                    
-                    return ResponseEntity.ok(ApiResponse.success("Login successful", data));
+            System.out.println("Login attempt for email: " + signInDTO.getEmail() + ", role: " + signInDTO.getRole());
+            
+            // Check if user exists first
+            boolean userExists = false;
+            if ("Seller".equals(signInDTO.getRole())) {
+                var sellerOpt = sellerService.findByEmail(signInDTO.getEmail());
+                userExists = sellerOpt.isPresent();
+                if (userExists) {
+                    System.out.println("Seller found with email: " + signInDTO.getEmail());
                 }
             } else {
-                // Customer login
-                var customerOpt = customerService.authenticate(loginDto.getEmail(), loginDto.getPassword());
-                if (customerOpt.isPresent()) {
-                    Customer customer = customerOpt.get();
-                    Map<String, Object> data = new HashMap<>();
-                    data.put("firstName", customer.getFirstName());
-                    data.put("lastName", customer.getLastName());
-                    data.put("token", "customer-token-" + customer.getCustomerId());
-                    data.put("customer_id", customer.getCustomerId());
-                    data.put("email", customer.getEmail());
-                    data.put("phone", customer.getPhone());
-                    data.put("address", customer.getAddress());
-                    data.put("role", "User");
-                    
-                    return ResponseEntity.ok(ApiResponse.success("Login successful", data));
+                var customerOpt = customerService.findByEmail(signInDTO.getEmail());
+                userExists = customerOpt.isPresent();
+                if (userExists) {
+                    System.out.println("Customer found with email: " + signInDTO.getEmail());
                 }
             }
             
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.error("Invalid credentials"));
+            if (!userExists) {
+                System.out.println("User not found with email: " + signInDTO.getEmail());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResp("User not found", null, null));
+            }
+            
+            // Authenticate user using Spring Security
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(signInDTO.getEmail(), signInDTO.getPassword())
+            );
+            
+            System.out.println("Authentication successful for: " + signInDTO.getEmail());
+            
+            // Generate JWT token
+            String jwtToken = jwtUtils.generateJwtToken(authentication);
+            
+            Object userData = null;
+            
+            if ("Seller".equals(signInDTO.getRole())) {
+                // Seller login
+                var sellerOpt = sellerService.findByEmail(signInDTO.getEmail());
+                if (sellerOpt.isPresent()) {
+                    userData = sellerOpt.get();
+                }
+            } else {
+                // Customer login
+                var customerOpt = customerService.findByEmail(signInDTO.getEmail());
+                if (customerOpt.isPresent()) {
+                    userData = customerOpt.get();
+                }
+            }
+            
+            return ResponseEntity.ok(new AuthResp("Login successful", jwtToken, userData));
                     
+        } catch (BadCredentialsException e) {
+            System.err.println("Bad credentials for email: " + signInDTO.getEmail());
+            System.err.println("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResp("Invalid credentials", null, null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Login failed: " + e.getMessage()));
+            System.err.println("Login error for email: " + signInDTO.getEmail());
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new AuthResp("Login failed: " + e.getMessage(), null, null));
         }
     }
     
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<AuthResp> register(@RequestBody Map<String, Object> request) {
         try {
             String role = (String) request.get("role");
             
             if ("Seller".equals(role)) {
                 // Seller registration
-                Seller seller = new Seller();
-                seller.setFirstName((String) request.get("firstName"));
-                seller.setLastName((String) request.get("lastName"));
-                seller.setEmail((String) request.get("email"));
-                seller.setPhone((String) request.get("phone"));
-                seller.setPassword((String) request.get("password"));
-                seller.setShopName((String) request.get("shopName"));
-                seller.setShopAddress((String) request.get("shopAddress"));
+                SellerDto sellerDto = new SellerDto();
+                sellerDto.setFirstName((String) request.get("firstName"));
+                sellerDto.setLastName((String) request.get("lastName"));
+                sellerDto.setEmail((String) request.get("email"));
+                sellerDto.setPhone((String) request.get("phone"));
+                sellerDto.setShopName((String) request.get("shopName"));
+                sellerDto.setShopAddress((String) request.get("shopAddress"));
                 
-                Seller savedSeller = sellerService.registerSeller(seller);
-                return ResponseEntity.ok(ApiResponse.success("Seller registered successfully", savedSeller));
+                sellerDto.setPassword((String) request.get("password"));
+                if (sellerDto.getPassword() == null || sellerDto.getPassword().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                            .body(new AuthResp("Password is required", null, null));
+                }
+                SellerDto savedSeller = sellerService.registerSeller(sellerDto);
+                return ResponseEntity.ok(new AuthResp("Seller registered successfully", null, savedSeller));
                 
             } else {
                 // Customer registration
-                Customer customer = new Customer();
-                customer.setFirstName((String) request.get("firstName"));
-                customer.setLastName((String) request.get("lastName"));
-                customer.setEmail((String) request.get("email"));
-                customer.setPhone((String) request.get("phone"));
-                customer.setPassword((String) request.get("password"));
-                customer.setAddress((String) request.get("address"));
+                CustomerDto customerDto = new CustomerDto();
+                customerDto.setFirstName((String) request.get("firstName"));
+                customerDto.setLastName((String) request.get("lastName"));
+                customerDto.setEmail((String) request.get("email"));
+                customerDto.setPhone((String) request.get("phone"));
+                customerDto.setAddress((String) request.get("address"));
                 
-                Customer savedCustomer = customerService.registerCustomer(customer);
-                return ResponseEntity.ok(ApiResponse.success("Customer registered successfully", savedCustomer));
+                customerDto.setPassword((String) request.get("password"));
+                if (customerDto.getPassword() == null || customerDto.getPassword().trim().isEmpty()) {
+                    return ResponseEntity.badRequest()
+                            .body(new AuthResp("Password is required", null, null));
+                }
+                CustomerDto savedCustomer = customerService.registerCustomer(customerDto);
+                return ResponseEntity.ok(new AuthResp("Customer registered successfully", null, savedCustomer));
             }
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Registration failed: " + e.getMessage()));
+                    .body(new AuthResp("Registration failed: " + e.getMessage(), null, null));
         }
     }
 } 
