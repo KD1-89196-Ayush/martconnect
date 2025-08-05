@@ -1,98 +1,123 @@
 package com.sunbeam.service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.sunbeam.entities.Product;
+import com.sunbeam.dto.ProductDto;
 
 /**
  * Service interface for Product entity operations
  */
-public interface ProductService extends BaseService<Product, Integer> {
+public interface ProductService extends BaseService<ProductDto, Integer> {
+    
+    /**
+     * Add product
+     */
+    ProductDto addProduct(ProductDto productDto);
+    
+    /**
+     * Update product
+     */
+    ProductDto updateProduct(Integer productId, ProductDto productDto);
+    
+    /**
+     * Add product with category management
+     */
+    ProductDto addProductWithCategory(ProductDto productDto);
+    
+    /**
+     * Update product with category management
+     */
+    ProductDto updateProductWithCategory(Integer productId, ProductDto productDto);
+    
+    /**
+     * Update product stock
+     */
+    ProductDto updateStock(Integer productId, Integer newStock);
+    
+    /**
+     * Update product price
+     */
+    ProductDto updatePrice(Integer productId, BigDecimal newPrice);
     
     /**
      * Find products by name
      */
-    List<Product> findByName(String name);
+    List<ProductDto> findByName(String name);
     
     /**
      * Find products by category
      */
-    List<Product> findByCategory(String categoryName);
+    List<ProductDto> findByCategory(String categoryName);
     
     /**
      * Find products by seller
      */
-    List<Product> findBySeller(Integer sellerId);
-    
-    /**
-     * Find products by seller email
-     */
-    List<Product> findBySellerEmail(String sellerEmail);
+    List<ProductDto> findBySeller(Integer sellerId);
     
     /**
      * Find products by price range
      */
-    List<Product> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+    List<ProductDto> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
     
     /**
-     * Find products with stock greater than specified value
+     * Find products by stock greater than
      */
-    List<Product> findByStockGreaterThan(Integer minStock);
+    List<ProductDto> findByStockGreaterThan(Integer minStock);
     
     /**
-     * Find products with stock less than or equal to specified value
+     * Find products by stock less than or equal
      */
-    List<Product> findByStockLessThanEqual(Integer maxStock);
+    List<ProductDto> findByStockLessThanEqual(Integer maxStock);
     
     /**
      * Find products by unit
      */
-    List<Product> findByUnit(String unit);
+    List<ProductDto> findByUnit(String unit);
     
     /**
-     * Find products by name or description containing search term
+     * Find products by name or description containing
      */
-    List<Product> findByNameOrDescriptionContaining(String searchTerm);
+    List<ProductDto> findByNameOrDescriptionContaining(String searchTerm);
     
     /**
-     * Find products by multiple categories
+     * Find products by categories
      */
-    List<Product> findByCategories(List<String> categories);
+    List<ProductDto> findByCategories(List<String> categories);
     
     /**
      * Find products by seller and category
      */
-    List<Product> findBySellerAndCategory(Integer sellerId, String categoryName);
+    List<ProductDto> findBySellerAndCategory(Integer sellerId, String categoryName);
     
     /**
      * Find products by seller and price range
      */
-    List<Product> findBySellerAndPriceRange(Integer sellerId, BigDecimal minPrice, BigDecimal maxPrice);
+    List<ProductDto> findBySellerAndPriceRange(Integer sellerId, BigDecimal minPrice, BigDecimal maxPrice);
     
     /**
-     * Find products with pagination
+     * Find all products with pagination
      */
-    Page<Product> findAll(Pageable pageable);
+    Page<ProductDto> findAll(Pageable pageable);
     
     /**
      * Find products by category with pagination
      */
-    Page<Product> findByCategory(String categoryName, Pageable pageable);
+    Page<ProductDto> findByCategory(String categoryName, Pageable pageable);
     
     /**
      * Find products by seller with pagination
      */
-    Page<Product> findBySeller(Integer sellerId, Pageable pageable);
+    Page<ProductDto> findBySeller(Integer sellerId, Pageable pageable);
     
     /**
-     * Find products by name or description with pagination
+     * Find products by name or description containing with pagination
      */
-    Page<Product> findByNameOrDescriptionContaining(String searchTerm, Pageable pageable);
+    Page<ProductDto> findByNameOrDescriptionContaining(String searchTerm, Pageable pageable);
     
     /**
      * Count products by seller
@@ -105,63 +130,27 @@ public interface ProductService extends BaseService<Product, Integer> {
     long countByCategory(String categoryName);
     
     /**
-     * Find products created in a specific date range
-     */
-    List<Product> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
-    /**
-     * Find products updated in a specific date range
-     */
-    List<Product> findByUpdatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
-    /**
      * Find products with low stock
      */
-    List<Product> findProductsWithLowStock(Integer lowStockThreshold);
+    List<ProductDto> findProductsWithLowStock(Integer lowStockThreshold);
     
     /**
-     * Add product
+     * Search products by name and category
      */
-    Product addProduct(Product product);
+    List<ProductDto> searchProductsByNameAndCategory(String name, String category);
     
     /**
-     * Update product
+     * Search products with multiple criteria
      */
-    Product updateProduct(Integer productId, Product product);
-    
-    /**
-     * Update product stock
-     */
-    Product updateStock(Integer productId, Integer newStock);
-    
-    /**
-     * Update product price
-     */
-    Product updatePrice(Integer productId, BigDecimal newPrice);
-    
-    /**
-     * Search products with filters
-     */
-    List<Product> searchProducts(String searchTerm, String category, BigDecimal minPrice, 
-                                BigDecimal maxPrice, Integer minStock, String unit);
+    List<ProductDto> searchProducts(String name, String category, BigDecimal minPrice, BigDecimal maxPrice, Integer minStock, String unit);
     
     /**
      * Get products with low stock by seller
      */
-    List<Product> getProductsWithLowStockBySeller(Integer sellerId, Integer lowStockThreshold);
+    List<ProductDto> getProductsWithLowStockBySeller(Integer sellerId, Integer lowStockThreshold);
     
     /**
      * Get out of stock products by seller
      */
-    List<Product> getOutOfStockProductsBySeller(Integer sellerId);
-
-    /**
-     * Add product with category management
-     */
-    Product addProductWithCategory(Product product);
-    
-    /**
-     * Update product with category management
-     */
-    Product updateProductWithCategory(Integer productId, Product product);
+    List<ProductDto> getOutOfStockProductsBySeller(Integer sellerId);
 } 

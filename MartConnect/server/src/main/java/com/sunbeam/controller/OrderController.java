@@ -1,76 +1,60 @@
 package com.sunbeam.controller;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sunbeam.dto.ApiResponse;
-import com.sunbeam.entities.Customer;
-import com.sunbeam.entities.Order;
+import com.sunbeam.dto.OrderDto;
 import com.sunbeam.entities.Order.PaymentStatus;
-import com.sunbeam.entities.OrderItem;
-import com.sunbeam.entities.Product;
-import com.sunbeam.entities.Seller;
 import com.sunbeam.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
-@CrossOrigin(origins = "*")
 public class OrderController {
     
     @Autowired
     private OrderService orderService;
     
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<List<OrderDto>> getAllOrders() {
         try {
-            List<Order> orders = orderService.findAll();
-            
-            return ResponseEntity.ok(ApiResponse.success("Orders retrieved successfully", orders));
+            List<OrderDto> orders = orderService.findAll();
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve orders: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getOrderById(@PathVariable Integer id) {
+    public ResponseEntity<OrderDto> getOrderById(@PathVariable Integer id) {
         try {
-            Optional<Order> order = orderService.findById(id);
+            Optional<OrderDto> order = orderService.findById(id);
             if (order.isPresent()) {
-                return ResponseEntity.ok(ApiResponse.success("Order retrieved successfully", order.get()));
+                return ResponseEntity.ok(order.get());
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(ApiResponse.error("Order not found"));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve order: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
     @PostMapping
-    public ResponseEntity<ApiResponse> createOrder(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<OrderDto> createOrder(@RequestBody Map<String, Object> request) {
         try {
             System.out.println("Received order request: " + request);
             
@@ -78,8 +62,6 @@ public class OrderController {
             Map<String, Object> customerMap = (Map<String, Object>) request.get("customer");
             Map<String, Object> sellerMap = (Map<String, Object>) request.get("seller");
             BigDecimal totalAmount = new BigDecimal(request.get("totalAmount").toString());
-            BigDecimal deliveryCharge = request.get("deliveryCharge") != null ? 
-                new BigDecimal(request.get("deliveryCharge").toString()) : BigDecimal.ZERO;
             String paymentStatus = (String) request.get("paymentStatus");
             String transactionId = (String) request.get("transactionId");
             List<Map<String, Object>> orderItemsList = (List<Map<String, Object>>) request.get("orderItems");
@@ -87,162 +69,149 @@ public class OrderController {
             System.out.println("Extracted data - Customer: " + customerMap + ", Seller: " + sellerMap + ", Total: " + totalAmount + ", Items: " + orderItemsList);
             
             if (customerMap == null || sellerMap == null) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Customer and seller information are required"));
+                return ResponseEntity.badRequest().build();
             }
             
             Integer customerId = (Integer) customerMap.get("customerId");
             Integer sellerId = (Integer) sellerMap.get("sellerId");
             
-            if (customerId == null || sellerId == null) {
-                return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Customer ID and seller ID are required"));
+            // Try alternative field names if the primary ones are not found
+            if (customerId == null) {
+                customerId = (Integer) customerMap.get("customer_id");
+            }
+            if (sellerId == null) {
+                sellerId = (Integer) sellerMap.get("seller_id");
             }
             
-                         // Create order entity
-             Order order = new Order();
-             
-             // Set customer
-             Customer customer = new Customer();
-             customer.setCustomerId(customerId);
-             order.setCustomer(customer);
-             
-             // Set seller
-             Seller seller = new Seller();
-             seller.setSellerId(sellerId);
-             order.setSeller(seller);
-             
-             System.out.println("Setting customer ID: " + customerId + ", seller ID: " + sellerId);
+            if (customerId == null || sellerId == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // Create order DTO
+            OrderDto orderDto = new OrderDto();
+            
+            // Set customer and seller IDs
+            orderDto.setCustomerId(customerId);
+            orderDto.setSellerId(sellerId);
+            
+            System.out.println("Setting customer ID: " + customerId + ", seller ID: " + sellerId);
             
             // Set other fields
-            order.setTotalAmount(totalAmount);
-            order.setDeliveryCharge(deliveryCharge);
-            order.setTransactionId(transactionId);
+            System.out.println("Received totalAmount from frontend: " + totalAmount);
+            
+            // Calculate total from order items to verify
+            BigDecimal calculatedTotal = BigDecimal.ZERO;
+            if (orderItemsList != null) {
+                for (Map<String, Object> itemMap : orderItemsList) {
+                    Integer quantity = (Integer) itemMap.get("quantity");
+                    BigDecimal pricePerUnit = new BigDecimal(itemMap.get("pricePerUnit").toString());
+                    BigDecimal itemTotal = pricePerUnit.multiply(new BigDecimal(quantity));
+                    calculatedTotal = calculatedTotal.add(itemTotal);
+                    System.out.println("Item: qty=" + quantity + ", price=" + pricePerUnit + ", itemTotal=" + itemTotal);
+                }
+            }
+            System.out.println("Calculated total from items: " + calculatedTotal);
+            System.out.println("Frontend total: " + totalAmount);
+            System.out.println("Difference: " + totalAmount.subtract(calculatedTotal));
+            
+            orderDto.setTotalAmount(totalAmount);
+            orderDto.setDeliveryCharge(BigDecimal.ZERO);
+            orderDto.setTransactionId(transactionId);
+            
+            // Set timestamps
+            LocalDateTime now = LocalDateTime.now();
+            orderDto.setCreatedAt(now);
+            orderDto.setUpdatedAt(now);
             
             // Set payment status
             if (paymentStatus != null) {
                 try {
-                    order.setPaymentStatus(Order.PaymentStatus.valueOf(paymentStatus));
+                    orderDto.setPaymentStatus(PaymentStatus.valueOf(paymentStatus));
                 } catch (IllegalArgumentException e) {
-                    order.setPaymentStatus(Order.PaymentStatus.PENDING);
+                    orderDto.setPaymentStatus(PaymentStatus.PAID);
                 }
+            } else {
+                orderDto.setPaymentStatus(PaymentStatus.PAID);
             }
             
             // Create order items
-            List<OrderItem> orderItems = new ArrayList<>();
+            List<com.sunbeam.dto.OrderItemDto> orderItems = new ArrayList<>();
             if (orderItemsList != null) {
                 for (Map<String, Object> itemMap : orderItemsList) {
                     Map<String, Object> productMap = (Map<String, Object>) itemMap.get("product");
                     Integer productId = (Integer) productMap.get("productId");
+                    
+                    // Try alternative field name if the primary one is not found
+                    if (productId == null) {
+                        productId = (Integer) productMap.get("product_id");
+                    }
+                    
                     Integer quantity = (Integer) itemMap.get("quantity");
                     BigDecimal pricePerUnit = new BigDecimal(itemMap.get("pricePerUnit").toString());
                     
                     if (productId == null || quantity == null || pricePerUnit == null) {
-                        return ResponseEntity.badRequest()
-                                .body(ApiResponse.error("Product ID, quantity, and price are required for order items"));
+                        return ResponseEntity.badRequest().build();
                     }
                     
-                    OrderItem orderItem = new OrderItem();
+                    com.sunbeam.dto.OrderItemDto orderItemDto = new com.sunbeam.dto.OrderItemDto();
                     
-                                         // Set product
-                     Product product = new Product();
-                     product.setProductId(productId);
-                     orderItem.setProduct(product);
-                     
-                     orderItem.setQuantity(quantity);
-                     orderItem.setPricePerUnit(pricePerUnit);
-                     orderItem.setOrder(order);
-                     
-                     orderItems.add(orderItem);
-                     
-                     System.out.println("Created order item for product ID: " + productId + ", quantity: " + quantity + ", price: " + pricePerUnit);
+                    // Set product ID
+                    orderItemDto.setProductId(productId);
+                    
+                    orderItemDto.setQuantity(quantity);
+                    orderItemDto.setPricePerUnit(pricePerUnit);
+                    orderItemDto.setCreatedAt(now); // Set timestamp for order item
+                    
+                    orderItems.add(orderItemDto);
+                    
+                    System.out.println("Created order item for product ID: " + productId + ", quantity: " + quantity + ", price: " + pricePerUnit);
                 }
             }
             
-            order.setOrderItems(orderItems);
+            orderDto.setOrderItems(orderItems);
             
             System.out.println("Creating order with service...");
-            Order createdOrder = orderService.createOrder(order);
+            OrderDto createdOrder = orderService.createOrder(orderDto);
             System.out.println("Order created successfully with ID: " + createdOrder.getOrderId());
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.success("Order created successfully", createdOrder));
+            System.out.println("Final order total: " + createdOrder.getTotalAmount());
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdOrder);
         } catch (Exception e) {
             System.err.println("Error creating order: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to create order: " + e.getMessage()));
-        }
-    }
-    
-    @PutMapping("/{id}/payment-status")
-    public ResponseEntity<ApiResponse> updatePaymentStatus(
-            @PathVariable Integer id,
-            @RequestParam PaymentStatus paymentStatus) {
-        try {
-            Order updatedOrder = orderService.updatePaymentStatus(id, paymentStatus);
-            return ResponseEntity.ok(ApiResponse.success("Payment status updated successfully", updatedOrder));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to update payment status: " + e.getMessage()));
-        }
-    }
-    
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<ApiResponse> cancelOrder(@PathVariable Integer id) {
-        try {
-            Order cancelledOrder = orderService.cancelOrder(id);
-            return ResponseEntity.ok(ApiResponse.success("Order cancelled successfully", cancelledOrder));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.error("Failed to cancel order: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
     
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<ApiResponse> getCustomerOrders(
-            @PathVariable Integer customerId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<List<OrderDto>> getCustomerOrders(@PathVariable Integer customerId) {
         try {
-            // For now, return all customer orders without pagination to simplify frontend
-            List<Order> orders = orderService.findByCustomer(customerId);
+            System.out.println("Fetching orders for customer ID: " + customerId);
             
-            return ResponseEntity.ok(ApiResponse.success("Customer orders retrieved successfully", orders));
+            // Return all customer orders with seller and order items to simplify frontend
+            List<OrderDto> orders = orderService.findByCustomerWithSellerAndItems(customerId);
+            
+            System.out.println("Found " + orders.size() + " orders for customer " + customerId);
+            if (orders.size() > 0) {
+                System.out.println("First order: " + orders.get(0));
+            }
+            
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve customer orders: " + e.getMessage()));
+            System.err.println("Error fetching customer orders: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
     
     @GetMapping("/seller/{sellerId}")
-    public ResponseEntity<ApiResponse> getSellerOrders(
-            @PathVariable Integer sellerId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<List<OrderDto>> getSellerOrders(@PathVariable Integer sellerId) {
         try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Order> orders = orderService.findBySeller(sellerId, pageable);
+            // Return all seller orders with customer and order items to simplify frontend
+            List<OrderDto> orders = orderService.findBySellerWithCustomerAndItems(sellerId);
             
-            return ResponseEntity.ok(ApiResponse.success("Seller orders retrieved successfully", orders));
+            return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve seller orders: " + e.getMessage()));
-        }
-    }
-    
-    @GetMapping("/status/{paymentStatus}")
-    public ResponseEntity<ApiResponse> getOrdersByPaymentStatus(
-            @PathVariable PaymentStatus paymentStatus,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Order> orders = orderService.findByPaymentStatus(paymentStatus, pageable);
-            
-            return ResponseEntity.ok(ApiResponse.success("Orders by payment status retrieved", orders));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.error("Failed to retrieve orders by payment status: " + e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 } 
