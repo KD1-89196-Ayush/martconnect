@@ -37,4 +37,7 @@ public class OrderItemDto {
     private String productName;
     private String productImageUrl;
     private BigDecimal totalPrice; // quantity * pricePerUnit
+    
+    // Product object for frontend compatibility
+    private ProductDto product;
 } 
