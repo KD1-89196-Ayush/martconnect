@@ -1,42 +1,26 @@
 package com.sunbeam.dao;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.sunbeam.entities.Order;
-import com.sunbeam.entities.Order.PaymentStatus;
 
-public interface OrderDao extends JpaRepository<Order, Long> {
+@Repository
+public interface OrderDao extends JpaRepository<Order, Integer> {
     
-    //find orders by customer
-    List<Order> findByCustomerId(Long customerId);
+    /**
+     * Find orders by seller with customer and order items
+     */
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.customer LEFT JOIN FETCH o.orderItems oi LEFT JOIN FETCH oi.product WHERE o.seller.sellerId = :sellerId")
+    List<Order> findBySellerWithCustomerAndItems(@Param("sellerId") Integer sellerId);
     
-    //find orders by seller
-    List<Order> findBySellerId(Long sellerId);
-    
-    //find orders by payment status
-    List<Order> findByPaymentStatus(PaymentStatus paymentStatus);
-    
-    //find orders by customer and payment status
-    List<Order> findByCustomerIdAndPaymentStatus(Long customerId, PaymentStatus paymentStatus);
-    
-    //find orders by seller and payment status
-    List<Order> findBySellerIdAndPaymentStatus(Long sellerId, PaymentStatus paymentStatus);
-    
-    //find orders by total amount range
-    List<Order> findByTotalAmountBetween(BigDecimal minAmount, BigDecimal maxAmount);
-    
-    //find orders by transaction id
-    List<Order> findByTransactionIdContaining(String transactionId);
-    
-    //count by customer
-    long countByCustomerId(Long customerId);
-    
-    //count by seller
-    long countBySellerId(Long sellerId);
-    
-    //count by payment status
-    long countByPaymentStatus(PaymentStatus paymentStatus);
+    /**
+     * Find orders by customer with seller and order items
+     */
+    @Query("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.seller LEFT JOIN FETCH o.orderItems oi LEFT JOIN FETCH oi.product WHERE o.customer.customerId = :customerId")
+    List<Order> findByCustomerWithSellerAndItems(@Param("customerId") Integer customerId);
 } 
