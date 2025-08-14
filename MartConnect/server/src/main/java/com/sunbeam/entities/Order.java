@@ -5,8 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,14 +22,12 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-@Entity
-@Table(name = "orders")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"customer", "seller", "orderItems"})
+@Entity
+@Table(name = "orders")
 public class Order {
     
     @Id
@@ -40,12 +36,12 @@ public class Order {
     private Integer orderId;
     
     @NotNull(message = "Customer is required")
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
     
     @NotNull(message = "Seller is required")
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id", nullable = false)
     private Seller seller;
     
@@ -60,7 +56,7 @@ public class Order {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_status", length = 20)
-    private PaymentStatus paymentStatus = PaymentStatus.PAID;
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
     
     @Column(name = "order_date", nullable = false, updatable = false)
     private LocalDateTime orderDate;
@@ -74,27 +70,8 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToMany(mappedBy = "order", fetch = FetchType.EAGER, cascade = jakarta.persistence.CascadeType.ALL)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
-    
-    /**
-     * Calculate total amount from order items
-     */
-    public BigDecimal calculateTotalFromItems() {
-        if (orderItems == null || orderItems.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return orderItems.stream()
-                .map(item -> item.getPricePerUnit().multiply(new BigDecimal(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-    
-    /**
-     * Calculate final total (items only, no delivery charge)
-     */
-    public BigDecimal calculateFinalTotal() {
-        return calculateTotalFromItems();
-    }
     
     public enum PaymentStatus {
         PENDING, PAID, FAILED, CANCELLED

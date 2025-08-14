@@ -32,7 +32,7 @@ public class OrderDto {
     @DecimalMin(value = "0.00", message = "Delivery charge cannot be negative")
     private BigDecimal deliveryCharge = BigDecimal.ZERO;
     
-    private PaymentStatus paymentStatus = PaymentStatus.PAID;
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
     
     private LocalDateTime orderDate;
     
@@ -45,12 +45,6 @@ public class OrderDto {
     private String customerName;
     private String sellerName;
     private String shopName;
-    
-    // Customer object for frontend compatibility
-    private CustomerDto customer;
-    
-    // Seller object for frontend compatibility
-    private SellerDto seller;
     
     private List<OrderItemDto> orderItems;
 } 
