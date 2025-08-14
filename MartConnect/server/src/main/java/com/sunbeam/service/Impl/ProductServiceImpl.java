@@ -54,7 +54,7 @@ public class ProductServiceImpl implements ProductService {
                 throw new RuntimeException("Category not found with ID: " + productDto.getCategoryId());
             }
         } else if (product.getCategory() != null && product.getCategory().getName() != null) {
-        // Handle category if it's sent as a string
+            // Handle category if it's sent as a string
             String categoryName = product.getCategory().getName();
             Optional<CategoryDto> existingCategory = categoryService.findByName(categoryName);
             
@@ -308,94 +308,10 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> findBySeller(Integer sellerId) { 
         return productDao.findBySeller_SellerId(sellerId).stream().map(product -> modelMapper.map(product, ProductDto.class)).collect(Collectors.toList()); 
     }
-    
-    @Override
-    public List<ProductDto> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) { 
-        // Since findByPriceBetween was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public List<ProductDto> findByStockGreaterThan(Integer minStock) { 
-        // Since findByStockGreaterThan was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public List<ProductDto> findByStockLessThanEqual(Integer maxStock) { 
-        // Since findByStockLessThanEqual was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public List<ProductDto> findByUnit(String unit) { 
-        // Since findByUnitContainingIgnoreCase was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
+       
     @Override
     public List<ProductDto> findByNameOrDescriptionContaining(String searchTerm) { 
         return productDao.findByNameOrDescriptionContaining(searchTerm).stream().map(product -> modelMapper.map(product, ProductDto.class)).collect(Collectors.toList()); 
-    }
-    
-    @Override
-    public List<ProductDto> findByCategories(List<String> categories) { 
-        // Since findByCategories was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public List<ProductDto> findBySellerAndCategory(Integer sellerId, String categoryName) { 
-        // Since findBySeller_SellerIdAndCategory_NameContainingIgnoreCase was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public List<ProductDto> findBySellerAndPriceRange(Integer sellerId, BigDecimal minPrice, BigDecimal maxPrice) { 
-        // Since findBySellerAndPriceRange was removed from ProductDao, return empty list
-        return List.of(); 
-    }
-    
-    @Override
-    public Page<ProductDto> findAll(Pageable pageable) { 
-        // Since pagination methods were removed from ProductDao, return empty page
-        return org.springframework.data.domain.Page.empty(pageable); 
-    }
-    
-    @Override
-    public Page<ProductDto> findByCategory(String categoryName, Pageable pageable) { 
-        // Since pagination methods were removed from ProductDao, return empty page
-        return org.springframework.data.domain.Page.empty(pageable); 
-    }
-    
-    @Override
-    public Page<ProductDto> findBySeller(Integer sellerId, Pageable pageable) { 
-        // Since pagination methods were removed from ProductDao, return empty page
-        return org.springframework.data.domain.Page.empty(pageable); 
-    }
-    
-    @Override
-    public Page<ProductDto> findByNameOrDescriptionContaining(String searchTerm, Pageable pageable) { 
-        // Since pagination methods were removed from ProductDao, return empty page
-        return org.springframework.data.domain.Page.empty(pageable); 
-    }
-    
-    @Override
-    public long countBySeller(Integer sellerId) { 
-        // Since countBySeller_SellerId was removed from ProductDao, return 0
-        return 0; 
-    }
-    
-    @Override
-    public long countByCategory(String categoryName) { 
-        // Since countByCategory_NameContainingIgnoreCase was removed from ProductDao, return 0
-        return 0; 
-    }
-    
-    @Override
-    public List<ProductDto> findProductsWithLowStock(Integer lowStockThreshold) { 
-        // Since findProductsWithLowStock was removed from ProductDao, return empty list
-        return List.of(); 
     }
     
     @Override
@@ -473,7 +389,7 @@ public class ProductServiceImpl implements ProductService {
         return products.stream().map(product -> modelMapper.map(product, ProductDto.class)).collect(Collectors.toList());
     }
     
-        @Override
+    @Override
     public List<ProductDto> getProductsWithLowStockBySeller(Integer sellerId, Integer lowStockThreshold) {
         return productDao.findBySeller_SellerId(sellerId).stream()
             .filter(p -> p.getStock() <= lowStockThreshold)
@@ -488,4 +404,5 @@ public class ProductServiceImpl implements ProductService {
             .map(product -> modelMapper.map(product, ProductDto.class))
             .collect(Collectors.toList());
     }
+
 } 
