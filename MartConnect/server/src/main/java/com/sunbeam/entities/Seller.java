@@ -1,7 +1,7 @@
 package com.sunbeam.entities;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList; 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,20 +20,18 @@ import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 @Entity
-@Table(name = "customers")
+@Table(name = "sellers")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = {"areas", "cartItems", "orders"})
-public class Customer {
+public class Seller {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "customer_id")
-    private Integer customerId;
+    @Column(name = "seller_id")
+    private Integer sellerId;
     
     @NotBlank(message = "First name is required")
     @Column(name = "first_name", nullable = false, length = 50)
@@ -53,12 +51,17 @@ public class Customer {
     @Column(name = "phone", nullable = false, length = 15)
     private String phone;
     
-    @Column(name = "address", columnDefinition = "TEXT")
-    private String address;
-    
     @NotBlank(message = "Password is required")
     @Column(name = "password", nullable = false)
     private String password;
+    
+    @NotBlank(message = "Shop name is required")
+    @Column(name = "shop_name", nullable = false, length = 100)
+    private String shopName;
+    
+    @NotBlank(message = "Shop address is required")
+    @Column(name = "shop_address", nullable = false, columnDefinition = "TEXT")
+    private String shopAddress;
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,15 +69,11 @@ public class Customer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
     @JsonIgnore
-    private List<Area> areas = new ArrayList<>();
+    private List<Product> products = new ArrayList<>();
     
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
-    @JsonIgnore
-    private List<Cart> cartItems = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "customer", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
     @JsonIgnore
     private List<Order> orders = new ArrayList<>();
 } 
