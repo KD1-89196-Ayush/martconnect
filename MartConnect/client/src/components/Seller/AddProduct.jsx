@@ -1,24 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import Footer from "./Footer";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../StylingSheet/AddProduct.css";
 import { addProduct } from "../../services/addProduct";
+import { fetchCategories } from "../../services/categoryService";
 import { useNavigate } from "react-router-dom";
 
 const AddProduct = () => {
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState({
     name: "",
     description: "",
     unit: "",
     price: "",
-    inStock: "",
+    stock: "",
     image: null,
   });
 
   const navigate = useNavigate();
   const seller = JSON.parse(sessionStorage.getItem('seller')) || JSON.parse(localStorage.getItem('seller'));
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await fetchCategories();
+        setCategories(categoriesData);
+      } catch (error) {
+        // Failed to load categories
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,29 +50,58 @@ const AddProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Find the category ID from the selected category name
+    const selectedCategory = categories.find(cat => cat.name === category);
+    if (!selectedCategory) {
+      alert("Please select a valid category");
+      return;
+    }
+
     const productData = {
       ...product,
-      category,
-      seller_id: seller?.seller_id
+      category: {
+        categoryId: selectedCategory.categoryId
+      },
+      seller: {
+        sellerId: seller?.seller_id
+      },
+      stock: parseInt(product.stock) || 0
     };
 
     const result = await addProduct(productData);
 
     if (result.success) {
-      alert(" Product added successfully!");
+      alert("Product added successfully!");
       setProduct({
         name: "",
         description: "",
         unit: "",
         price: "",
-        inStock: "",
+        stock: "",
         image: null,
       });
       setCategory("");
     } else {
-      alert(" Failed to add product: " + (result.error || "Unknown error"));
+      alert("Failed to add product: " + (result.error || "Unknown error"));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex flex-column min-vh-100 bg-light">
+        <Header />
+        <main className="container flex-grow-1 py-5 d-flex justify-content-center align-items-center">
+          <div className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3">Loading categories...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -70,18 +117,38 @@ const AddProduct = () => {
           {/* Category Buttons */}
           <div className="mb-4 text-center">
             <div className="btn-group flex-wrap" role="group">
-              {["Grains", "Dairy Product", "Soaps", "Edible Oil"].map((cat) => (
+              {categories.map((cat) => (
                 <button
-                  key={cat}
+                  key={cat.categoryId}
                   type="button"
                   className={`btn btn-outline-primary m-1 ${
-                    category === cat ? "active" : ""
+                    category === cat.name ? "active" : ""
                   }`}
-                  onClick={() => setCategory(cat)}
+                  onClick={() => setCategory(cat.name)}
                 >
-                  {cat}
+                  {cat.name}
                 </button>
               ))}
+            </div>
+            
+            {/* Category Dropdown Alternative */}
+            <div className="mt-3">
+              <select
+                className="form-select"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ maxWidth: "300px", margin: "0 auto" }}
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.categoryId} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <small className="form-text text-muted">
+                Or use the dropdown above to select a category
+              </small>
             </div>
           </div>
 
@@ -132,18 +199,6 @@ const AddProduct = () => {
                     <option value="Quantity">Quantity</option>
                   </select>
                 </div>
-                <div className="mb-3">
-                  <input
-                    type="number"
-                    name="quantity"
-                    className="form-control"
-                    placeholder="Quantity"
-                    value={product.quantity || ''}
-                    onChange={handleInputChange}
-                    min={1}
-                    required
-                  />
-                </div>
 
                 <div className="mb-3">
                   <input
@@ -153,35 +208,26 @@ const AddProduct = () => {
                     placeholder="Price"
                     value={product.price}
                     onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
                     required
                   />
                 </div>
 
                 <div className="mb-3">
-                  <label className="form-label me-3">In Stock:</label>
-                  <div className="form-check form-check-inline">
-                    <input
-                      type="radio"
-                      className="form-check-input"
-                      name="inStock"
-                      value="Yes"
-                      checked={product.inStock === "Yes"}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <label className="form-check-label">Yes</label>
-                  </div>
-                  <div className="form-check form-check-inline">
-                    <input
-                      type="radio"
-                      className="form-check-input"
-                      name="inStock"
-                      value="No"
-                      checked={product.inStock === "No"}
-                      onChange={handleInputChange}
-                    />
-                    <label className="form-check-label">No</label>
-                  </div>
+                  <input
+                    type="number"
+                    name="stock"
+                    className="form-control"
+                    placeholder="Stock Quantity"
+                    value={product.stock}
+                    onChange={handleInputChange}
+                    min="0"
+                    required
+                  />
+                  <small className="form-text text-muted">
+                    Enter the initial stock quantity available for this product
+                  </small>
                 </div>
 
                 <div className="mb-3">

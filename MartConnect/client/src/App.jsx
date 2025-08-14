@@ -12,31 +12,49 @@ import AddProduct from './components/Seller/AddProduct';
 import UpdateProduct from './components/Seller/UpdateProduct';
 import ProductOrder from "./components/Seller/ProductOrder";
 import SellerProfile from './components/Seller/Profile';
+import CategoryManagement from './components/Seller/CategoryManagement';
+import Dashboard from './components/Seller/Dashboard';
 
 import { AuthContext } from './contexts/auth.context';
 import { ToastContainer } from 'react-toastify';
 import { CustomerHome, CustomerAbout, CustomerContact, CustomerOrders, Cart, CustomerProfile } from './components/customers';
 
 function CustomerProtectedRoute({ children }) {
-  const user = React.useContext(AuthContext).user;
+  const { user, loading } = React.useContext(AuthContext);
+
+  if (loading) return null; // Wait until user is loaded
+
   if (!user || user.role !== 'User') {
     return <Navigate to="/login" state={{ role: 'Customer' }} />;
   }
   return children;
 }
 
+function SellerProtectedRoute({ children }) {
+  const { user, loading } = React.useContext(AuthContext);
+
+  if (loading) return null; // Wait until user is loaded
+
+  if (!user || user.role !== 'Seller') {
+    return <Navigate to="/login" state={{ role: 'Seller' }} />;
+  }
+  return children;
+}
+
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Load user from localStorage
+  // Load user from localStorage on first render
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
-  // Sync user to localStorage
+  // Sync user changes to localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
@@ -47,7 +65,7 @@ function App() {
 
   return (
     <>
-      <AuthContext.Provider value={{ user, setUser }}>
+      <AuthContext.Provider value={{ user, setUser, loading }}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -55,84 +73,23 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Seller Protected Routes */}
-          <Route
-            path="/seller-home"
-            element={user ? <SellerHome /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/about"
-            element={user ? <About /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/seller-contact"
-            element={user ? <SellerContact /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/add-product"
-            element={user ? <AddProduct /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/update-product"
-            element={user ? <UpdateProduct /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/order-details"
-            element={user ? <ProductOrder /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
-          <Route
-            path="/seller-profile"
-            element={user ? <SellerProfile /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
-          />
+          <Route path="/seller-home" element={<SellerProtectedRoute><SellerHome /></SellerProtectedRoute>} />
+          <Route path="/seller-dashboard" element={<SellerProtectedRoute><Dashboard /></SellerProtectedRoute>} />
+          <Route path="/about" element={<SellerProtectedRoute><About /></SellerProtectedRoute>} />
+          <Route path="/seller-contact" element={<SellerProtectedRoute><SellerContact /></SellerProtectedRoute>} />
+          <Route path="/add-product" element={<SellerProtectedRoute><AddProduct /></SellerProtectedRoute>} />
+          <Route path="/update-product" element={<SellerProtectedRoute><UpdateProduct /></SellerProtectedRoute>} />
+          <Route path="/order-details" element={<SellerProtectedRoute><ProductOrder /></SellerProtectedRoute>} />
+          <Route path="/seller-profile" element={<SellerProtectedRoute><SellerProfile /></SellerProtectedRoute>} />
+          <Route path="/category-management" element={<SellerProtectedRoute><CategoryManagement /></SellerProtectedRoute>} />
 
           {/* Customer Protected Routes */}
-          <Route
-            path="/customer-home"
-            element={
-              <CustomerProtectedRoute>
-                <CustomerHome />
-              </CustomerProtectedRoute>
-            }
-          />
-          <Route
-            path="/customer-about"
-            element={
-              <CustomerProtectedRoute>
-                <CustomerAbout />
-              </CustomerProtectedRoute>
-            }
-          />
-          <Route
-            path="/customer-contact"
-            element={
-              <CustomerProtectedRoute>
-                <CustomerContact />
-              </CustomerProtectedRoute>
-            }
-          />
-          <Route
-            path="/customer-orders"
-            element={
-              <CustomerProtectedRoute>
-                <CustomerOrders />
-              </CustomerProtectedRoute>
-            }
-          />
-          <Route
-            path="/cart"
-            element={
-              <CustomerProtectedRoute>
-                <Cart />
-              </CustomerProtectedRoute>
-            }
-          />
-          <Route
-            path="/customer-profile"
-            element={
-              <CustomerProtectedRoute>
-                <CustomerProfile />
-              </CustomerProtectedRoute>
-            }
-          />
+          <Route path="/customer-home" element={<CustomerProtectedRoute><CustomerHome /></CustomerProtectedRoute>} />
+          <Route path="/customer-about" element={<CustomerProtectedRoute><CustomerAbout /></CustomerProtectedRoute>} />
+          <Route path="/customer-contact" element={<CustomerProtectedRoute><CustomerContact /></CustomerProtectedRoute>} />
+          <Route path="/customer-orders" element={<CustomerProtectedRoute><CustomerOrders /></CustomerProtectedRoute>} />
+          <Route path="/cart" element={<CustomerProtectedRoute><Cart /></CustomerProtectedRoute>} />
+          <Route path="/customer-profile" element={<CustomerProtectedRoute><CustomerProfile /></CustomerProtectedRoute>} />
         </Routes>
       </AuthContext.Provider>
 
@@ -142,3 +99,159 @@ function App() {
 }
 
 export default App;
+
+
+// import React, { useState, useEffect } from 'react';
+// import { Navigate, Route, Routes } from 'react-router-dom';
+
+// import Home from './pages/Home';
+// import Login from './pages/Login';
+// import Register from './pages/Register';
+
+// import SellerHome from './components/Seller/SellerHome';
+// import About from './components/Seller/About';
+// import SellerContact from './components/Seller/contact';
+// import AddProduct from './components/Seller/AddProduct';
+// import UpdateProduct from './components/Seller/UpdateProduct';
+// import ProductOrder from "./components/Seller/ProductOrder";
+// import SellerProfile from './components/Seller/Profile';
+// import CategoryManagement from './components/Seller/CategoryManagement';
+// import Dashboard from './components/Seller/Dashboard';
+
+// import { AuthContext } from './contexts/auth.context';
+// import { ToastContainer } from 'react-toastify';
+// import { CustomerHome, CustomerAbout, CustomerContact, CustomerOrders, Cart, CustomerProfile } from './components/customers';
+
+// function CustomerProtectedRoute({ children }) {
+//   const user = React.useContext(AuthContext).user;
+//   if (!user || user.role !== 'User') {
+//     return <Navigate to="/login" state={{ role: 'Customer' }} />;
+//   }
+//   return children;
+// }
+
+// function App() {
+//   const [user, setUser] = useState(null);
+
+//   // Load user from localStorage
+//   useEffect(() => {
+//     const storedUser = localStorage.getItem('user');
+//     if (storedUser) {
+//       setUser(JSON.parse(storedUser));
+//     }
+//   }, []);
+
+//   // Sync user to localStorage
+//   useEffect(() => {
+//     if (user) {
+//       localStorage.setItem('user', JSON.stringify(user));
+//     } else {
+//       localStorage.removeItem('user');
+//     }
+//   }, [user]);
+
+//   return (
+//     <>
+//       <AuthContext.Provider value={{ user, setUser }}>
+//         <Routes>
+//           {/* Public Routes */}
+//           <Route path="/" element={<Home />} />
+//           <Route path="/login" element={<Login />} />
+//           <Route path="/register" element={<Register />} />
+
+//           {/* Seller Protected Routes */}
+//           <Route
+//             path="/seller-home"
+//             element={user ? <SellerHome /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/seller-dashboard"
+//             element={user ? <Dashboard /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/about"
+//             element={user ? <About /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/seller-contact"
+//             element={user ? <SellerContact /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/add-product"
+//             element={user ? <AddProduct /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/update-product"
+//             element={user ? <UpdateProduct /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/order-details"
+//             element={user ? <ProductOrder /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/seller-profile"
+//             element={user ? <SellerProfile /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+//           <Route
+//             path="/category-management"
+//             element={user ? <CategoryManagement /> : <Navigate to="/login" state={{ role: 'Seller' }} />}
+//           />
+
+//           {/* Customer Protected Routes */}
+//           <Route
+//             path="/customer-home"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <CustomerHome />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//           <Route
+//             path="/customer-about"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <CustomerAbout />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//           <Route
+//             path="/customer-contact"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <CustomerContact />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//           <Route
+//             path="/customer-orders"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <CustomerOrders />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//           <Route
+//             path="/cart"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <Cart />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//           <Route
+//             path="/customer-profile"
+//             element={
+//               <CustomerProtectedRoute>
+//                 <CustomerProfile />
+//               </CustomerProtectedRoute>
+//             }
+//           />
+//         </Routes>
+//       </AuthContext.Provider>
+
+//       <ToastContainer />
+//     </>
+//   );
+// }
+
+// export default App;

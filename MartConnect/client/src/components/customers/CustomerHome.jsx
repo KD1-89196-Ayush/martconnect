@@ -4,7 +4,6 @@ import CustomerFooter from "./Footer";
 import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "../../services/productService";
 import { toast } from "react-toastify";
-import sellerData from "../../sellerdata.json";
 
 function CustomerHome() {
   const [products, setProducts] = useState([]); //All product from db/json 
@@ -18,100 +17,211 @@ function CustomerHome() {
     const loadProducts = async () => {
       try {
         const result = await getAllProducts();
-        setProducts(result);
-        // Extract unique categories
-        const uniqueCategories = Array.from(new Set(result.map(p => p.category)));
+        
+        if (!result || !Array.isArray(result)) {
+          toast.error("Failed to load products - invalid data format");
+          return;
+        }
+        
+        // Validate that products have required fields (handle both backend and frontend field names)
+        const validProducts = result.filter(product => {
+          // Check for backend field names first, then frontend fallback
+          const hasSellerId = product.sellerId || product.seller_id;
+          const hasProductId = product.productId || product.product_id;
+          
+          if (!hasSellerId) {
+            return false;
+          }
+          if (!hasProductId) {
+            return false;
+          }
+          return true;
+        });
+        
+        // If no valid products found, use all products as fallback
+        const productsToShow = validProducts.length > 0 ? validProducts : result;
+        
+        setProducts(productsToShow);
+        // Extract unique categories (handle both backend and frontend field names)
+        const uniqueCategories = Array.from(new Set(productsToShow.map(p => {
+          // Backend returns 'category' as the category name
+          return p.category || p.category_name || p.categoryName;
+        }).filter(cat => cat))); // Filter out null/undefined values
         setCategories(uniqueCategories); //for category dropdown
       } catch (err) {
-        toast.error("Failed to load products");
+        toast.error("Failed to load products: " + err.message);
       }
     };
     loadProducts();
   }, []);
 
-  // Map seller_id to shop_name for quick lookup
+  // Map seller_id to shop_name for quick lookup (handle both frontend and backend sellers)
   const sellerIdToShopName = React.useMemo(() => {
     const map = {};
-    sellerData.forEach(seller => {
-      map[seller.seller_id] = seller.shop_name;
-    });
+    
+    // Backend sellers (from database)
+    const backendSellers = {
+      1: 'FreshMart Grocery',
+      2: 'Organic Food Store', 
+      3: 'Daily Needs Supermarket',
+      4: 'Health Food Corner',
+      5: 'Grocery Hub'
+    };
+    
+    // Use backend mappings
+    Object.assign(map, backendSellers);
+    
     return map;
   }, []);
 
   const handleAddToCart = (product) => {
+    if (product.stock <= 0) {
+      toast.error("Product is out of stock!");
+      return;
+    }
+    
+    // Handle both backend and frontend field names
+    const sellerId = product.sellerId || product.seller_id;
+    const productId = product.productId || product.product_id;
+    
+    // Ensure seller_id is included in the cart item
+    if (!sellerId) {
+      toast.error("Product seller information is missing!");
+      return;
+    }
+    
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.push({ ...product, quantity: 1 });
+    
+    // Check if product already exists in cart
+    const existingItemIndex = cart.findIndex(item => {
+      const itemProductId = item.productId || item.product_id;
+      return itemProductId === productId;
+    });
+    
+    if (existingItemIndex !== -1) {
+      // Update existing item quantity
+      cart[existingItemIndex].quantity += 1;
+    } else {
+      // Add new item with all necessary fields
+      cart.push({
+        ...product,
+        quantity: 1,
+        seller_id: sellerId, // Ensure seller_id is explicitly included
+        product_id: productId // Ensure product_id is explicitly included
+      });
+    }
+    
     localStorage.setItem("cart", JSON.stringify(cart));
     toast.success("Added to cart!");
   };
 
   // Filter products by search and category
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) || product.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category ? product.category === category : true;
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) || 
+                         (product.description && product.description.toLowerCase().includes(search.toLowerCase()));
+    
+    // Handle both backend and frontend category field names
+    const productCategory = product.category || product.category_name || product.categoryName;
+    const matchesCategory = category ? productCategory === category : true;
+    
     return matchesSearch && matchesCategory;
   });
+
+  // Helper function to get stock status
+  const getStockStatus = (stock) => {
+    if (stock <= 0) return { text: "Out of Stock", color: "danger" };
+    if (stock <= 5) return { text: `Only ${stock} left`, color: "warning" };
+    return { text: `In Stock (${stock})`, color: "success" };
+  };
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
       <CustomerHeader />
       <main className="flex-grow-1 container py-4">
-        <h2 className="text-center mb-4">Shop Products</h2>
-        <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-          <input
-            type="text"
-            className="form-control"
-            style={{ maxWidth: 300 }}
-            placeholder="Search products..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-          <div className="dropdown">
-            <button className="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              {category || "Filter by Category"}
-            </button>
-            <ul className="dropdown-menu">
-              <li><button className="dropdown-item" onClick={() => setCategory("")}>All</button></li>
+        <div className="text-center mb-4">
+          <h2 className="mb-3">Welcome to MartConnect</h2>
+          <p className="text-muted">Discover amazing products from trusted sellers</p>
+        </div>
+
+        <div className="row mb-4">
+          <div className="col-md-6 mb-3">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search products..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="col-md-6 mb-3">
+            <select
+              className="form-select"
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+            >
+              <option value="">All Categories</option>
               {categories.map(cat => (
-                <li key={cat}><button className="dropdown-item" onClick={() => setCategory(cat)}>{cat}</button></li>
+                <option key={cat} value={cat}>{cat}</option>
               ))}
-            </ul>
+            </select>
           </div>
         </div>
-        <div className="row row-cols-2 row-cols-md-5 g-2 justify-content-center">
+
+        <div className="row g-3">
           {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
-              <div className="col d-flex justify-content-center" key={product.product_id}>
-                <div className="card h-100 shadow border-primary rounded-4" style={{ minHeight: 320, maxWidth: 240, width: '100%' }}>
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="card-img-top p-1 rounded-3"
-                    style={{ height: "120px", objectFit: "contain", background: "#f8f9fa" }}
-                  />
-                  <div className="card-body d-flex flex-column p-1">
-                    <h6 className="card-title text-truncate mb-1" style={{ fontSize: '1rem' }}>{product.name}</h6>
-                    <p className="card-text small text-muted mb-1" style={{ minHeight: 24, fontSize: '0.85rem' }}>{product.description}</p>
-                    <div className="d-flex justify-content-between align-items-center mt-auto">
-                      <span className="badge bg-secondary" style={{ fontSize: '0.75rem' }}>{product.category}</span>
-                      <span className="fw-bold text-success" style={{ fontSize: '0.95rem' }}>₹{product.price}</span>
-                    </div>
-                    <button
-                      className="btn btn-sm btn-outline-success mt-2 w-100"
-                      onClick={() => handleAddToCart(product)}
-                      style={{ fontSize: '0.9rem', padding: '2px 0' }}
-                    >
-                      Add to Cart
-                    </button>
-                    <div className="text-center mt-2">
-                      <small className="text-muted">Sold by: {sellerIdToShopName[product.seller_id] || "Unknown Seller"}</small>
+            filteredProducts.map((product) => {
+              const stockStatus = getStockStatus(product.stock || 0);
+              const isOutOfStock = product.stock <= 0;
+              
+              const productId = product.productId || product.product_id;
+              const sellerId = product.sellerId || product.seller_id;
+              const imageUrl = product.imageUrl || product.image_url;
+              const category = product.category || product.category_name;
+              
+              return (
+                <div className="col-lg-3 col-md-4 col-sm-6" key={productId}>
+                  <div className="card h-100">
+                    <img
+                      src={imageUrl}
+                      alt={product.name}
+                      className="card-img-top"
+                      style={{ height: "180px", objectFit: "cover" }}
+                    />
+                    <div className="card-body p-3">
+                      <h6 className="card-title mb-2">{product.name}</h6>
+                      <p className="card-text small text-muted mb-2">{product.description}</p>
+                      
+                      <div className="mb-2">
+                        <span className={`badge bg-${stockStatus.color}`}>
+                          {stockStatus.text}
+                        </span>
+                      </div>
+                      
+                      <div className="d-flex justify-content-between align-items-center mb-2">
+                        <span className="badge bg-secondary">{category}</span>
+                        <span className="fw-bold text-success">₹{product.price}</span>
+                      </div>
+                      
+                      <button
+                        className={`btn btn-sm w-100 ${isOutOfStock ? 'btn-secondary disabled' : 'btn-primary'}`}
+                        onClick={() => handleAddToCart(product)}
+                        disabled={isOutOfStock}
+                      >
+                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                      </button>
+                      
+                      <small className="text-muted d-block mt-2">
+                        Sold by: {sellerIdToShopName[sellerId] || "Unknown Seller"}
+                      </small>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <p className="text-center">No products available.</p>
+            <div className="col-12 text-center py-5">
+              <p className="text-muted">No products found.</p>
+            </div>
           )}
         </div>
       </main>

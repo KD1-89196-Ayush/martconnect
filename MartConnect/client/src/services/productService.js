@@ -1,66 +1,80 @@
-import axios from "axios";
-import productData from "../data.json"; // fallback dummy data
+import api from "./axiosConfig"; // Use configured axios instance
 
-const BASE_URL = "http://localhost:8080/api";
-const USE_JSON = true; // Toggle to true for local JSON, false for backend
+const BASE_URL = "http://localhost:8087/api";
 
 // Fetch products
 export const fetchProducts = async () => {
-  if (USE_JSON) {
-    let products = JSON.parse(localStorage.getItem('products'));
-    if (!products) {
-      // Simulate API delay for JSON
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(productData), 300);
-      });
-    } else {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(products), 300);
-      });
-    }
-  } else {
+  try {
+    // First, let's check if the backend is accessible
     try {
-      const response = await axios.get(`${BASE_URL}/products`);
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      throw error;
+      await api.get(`/products`, { timeout: 5000 });
+    } catch (healthError) {
+      if (healthError.code === 'ECONNREFUSED') {
+        throw new Error("Backend server is not running. Please start the server on port 8087.");
+      } else if (healthError.code === 'ENOTFOUND') {
+        throw new Error("Cannot connect to backend server. Please check if the server is running.");
+      } else {
+        throw new Error(`Backend connection failed: ${healthError.message}`);
+      }
     }
+    
+    const response = await api.get(`/products`);
+    
+    // Handle direct array response (new format)
+    if (Array.isArray(response.data)) {
+      return response.data;
+    } else if (response.data.success) {
+      // Handle both paginated and non-paginated responses
+      const data = response.data.data;
+      if (data && data.content) {
+        // Paginated response
+        return data.content;
+      } else if (Array.isArray(data)) {
+        // Direct array response
+        return data;
+      } else {
+        return [];
+      }
+    } else {
+      throw new Error(response.data.message);
+    }
+  } catch (error) {
+    throw error;
   }
 };
 
 // Add to Cart (requires backend)
 export const addToCart = async (productId, userId) => {
-  if (USE_JSON) {
-    console.log(`[DEV] Simulate addToCart: productId=${productId}, userId=${userId}`);
-    return { success: true };
-  }
   try {
-    const response = await axios.post(`${BASE_URL}/cart`, {
+    const response = await api.post(`/cart`, {
       productId,
-      userId,
+      customerId: userId,
+      quantity: 1
     });
-    return response.data;
+    if (response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      throw new Error(response.data.message);
+    }
   } catch (error) {
-    console.error("Error adding to cart:", error);
     throw error;
   }
 };
 
 // Buy Now (requires backend)
 export const buyNow = async (productId, userId) => {
-  if (USE_JSON) {
-    console.log(`[DEV] Simulate buyNow: productId=${productId}, userId=${userId}`);
-    return { success: true };
-  }
   try {
-    const response = await axios.post(`${BASE_URL}/purchase`, {
+    const response = await api.post(`/orders`, {
       productId,
-      userId,
+      customerId: userId,
+      quantity: 1
     });
-    return response.data;
+    if (response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      throw new Error(response.data.message);
+    }
   } catch (error) {
-    console.error("Error during purchase:", error);
     throw error;
   }
 };
