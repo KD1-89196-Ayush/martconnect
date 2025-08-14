@@ -35,7 +35,7 @@ public class CartController {
         }
     }
     
-    @PostMapping
+    @PostMapping("/cart")
     public ResponseEntity<CartDto> addToCart(@RequestBody Map<String, Object> request) {
         try {
             System.out.println("Received cart request: " + request);
@@ -93,13 +93,13 @@ public class CartController {
         }
     }
     
-    @DeleteMapping("/customer/{customerId}")
-    public ResponseEntity<Void> clearCustomerCart(@PathVariable Integer customerId) {
-        try {
-            cartService.clearCustomerCart(customerId);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-    }
+//    @DeleteMapping("/customer/{customerId}")
+//    public ResponseEntity<Void> clearCustomerCart(@PathVariable Integer customerId) {
+//        try {
+//            cartService.clearCustomerCart(customerId);
+//            return ResponseEntity.noContent().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+//        }
+//    }
 } 
