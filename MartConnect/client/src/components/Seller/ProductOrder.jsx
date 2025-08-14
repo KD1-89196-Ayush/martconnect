@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import SellerHeader from "./Header";
 import Footer from "./Footer";
-import { getAllOrders } from "../../services/orderDetails";
-
-const USE_JSON = true; // Set to false for backend
+import { getSellerOrders } from "../../services/orderDetails";
 
 const OrderDetail = () => {
   const navigate = useNavigate();
@@ -15,7 +13,7 @@ const OrderDetail = () => {
   const [orderCustomerName, setOrderCustomerName] = useState("Customer");
   const [loading, setLoading] = useState(true);
   const [allSellerOrders, setAllSellerOrders] = useState([]);
-  const [showOrderList, setShowOrderList] = useState(false);
+  const [showOrderList, setShowOrderList] = useState(true); // Changed to true to show order list by default
   const [detailedOrders, setDetailedOrders] = useState([]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
@@ -28,38 +26,40 @@ const OrderDetail = () => {
     }
 
     async function load() {
-      const res = await getAllOrders();
-      if (!res.success) {
-        alert("Failed to load orders: " + res.error);
-        return;
-      }
-      const allOrders = res.data;
-      // Only show orders for this seller
-      const sellerOrders = allOrders.filter(o => Number(o.seller_id) === Number(seller.seller_id));
-      let customers = [];
-      let orderItemsData = [];
-      let products = [];
-      if (USE_JSON) {
-        customers = (await import("../../customers.json")).default;
-        orderItemsData = (await import("../../order_items.json")).default;
-        products = (await import("../../data.json")).default;
-      } else {
-        // Fetch from backend if needed
-      }
+      // Backend processing logic
+      const sellerOrders = await getSellerOrders(seller.seller_id);
+      
       const detailed = sellerOrders.map(order => {
-        const customer = customers.find(c => Number(c.customer_id) === Number(order.customer_id));
-        const items = orderItemsData
-          .filter(item => Number(item.order_id) === order.order_id)
-          .map(item => {
-            const product = products.find(p => Number(p.product_id) === Number(item.product_id));
-            return {
-              ...item,
-              product_name: product ? product.name : 'Unknown Product',
-              price: item.price_per_unit,
-            };
-          });
+        // Extract customer info from backend order
+        const customer = order.customer ? {
+          customer_id: order.customer.customerId,
+          first_name: order.customer.firstName,
+          last_name: order.customer.lastName,
+          email: order.customer.email,
+          phone: order.customer.phone,
+          address: order.customer.address
+        } : null;
+        
+        // Extract order items from backend order
+        const items = order.orderItems ? order.orderItems.map(item => ({
+          order_item_id: item.orderItemId,
+          order_id: order.orderId,
+          product_id: item.product?.productId,
+          product_name: item.product?.name || 'Unknown Product',
+          quantity: item.quantity,
+          price_per_unit: item.pricePerUnit,
+          price: item.pricePerUnit
+        })) : [];
+        
         return {
-          ...order,
+          order_id: order.orderId,
+          customer_id: order.customer?.customerId,
+          seller_id: order.seller?.sellerId,
+          total_amount: order.totalAmount,
+          delivery_charge: 0,
+          payment_status: order.paymentStatus,
+          order_date: order.orderDate,
+          transaction_id: order.transactionId,
           customer,
           items,
         };
@@ -68,7 +68,7 @@ const OrderDetail = () => {
       setLoading(false);
     }
     load();
-  }, [orderId, navigate]);
+  }, [navigate]); // Removed orderId dependency since we're showing all orders
 
   const handlePriceChange = (index, value) => {
     const newItems = [...orderItems];
@@ -105,21 +105,29 @@ const OrderDetail = () => {
                 <tr>
                   <th>Order ID</th>
                   <th>Customer</th>
+                  <th>Delivery Address</th>
                   <th>Date</th>
                   <th>Status</th>
-                  <th>Total</th>
                   <th>Details</th>
                 </tr>
               </thead>
               <tbody>
                 {detailedOrders.map(order => (
-                  <>
-                  <tr key={order.order_id}>
+                  <React.Fragment key={order.order_id}>
+                  <tr>
                     <td>{order.order_id}</td>
                     <td>{order.customer ? `${order.customer.first_name} ${order.customer.last_name}` : 'Unknown'}</td>
+                    <td>
+                      {order.customer?.address ? (
+                        <div style={{ maxWidth: '200px', wordWrap: 'break-word' }}>
+                          {order.customer.address}
+                        </div>
+                      ) : (
+                        <span className="text-muted">No address provided</span>
+                      )}
+                    </td>
                     <td>{order.order_date}</td>
                     <td>{order.payment_status}</td>
-                    <td>₹{order.total_amount}</td>
                     <td>
                       <button
                         className="btn btn-sm btn-outline-primary"
@@ -132,6 +140,28 @@ const OrderDetail = () => {
                   {expandedOrderId === order.order_id && (
                     <tr>
                       <td colSpan={6}>
+                        {order.customer && (
+                          <div className="mb-3">
+                            <h6>Customer Information:</h6>
+                            <div className="row">
+                              <div className="col-md-6">
+                                <strong>Name:</strong> {order.customer.first_name} {order.customer.last_name}<br />
+                                <strong>Email:</strong> {order.customer.email}<br />
+                                <strong>Phone:</strong> {order.customer.phone}
+                              </div>
+                              <div className="col-md-6">
+                                <strong>Delivery Address:</strong><br />
+                                {order.customer.address ? (
+                                  <div>
+                                    {order.customer.address}
+                                  </div>
+                                ) : (
+                                  <span className="text-muted">No address provided</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         <b>Order Items:</b>
                         <table className="table table-sm mt-2">
                           <thead>
@@ -156,7 +186,7 @@ const OrderDetail = () => {
                       </td>
                     </tr>
                   )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

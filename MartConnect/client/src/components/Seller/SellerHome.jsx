@@ -8,7 +8,6 @@ import {
 } from "../../services/sellerProductService";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import sellerData from "../../sellerdata.json";
 
 function SellerHome() {
   const location = useLocation();
@@ -39,8 +38,10 @@ function SellerHome() {
       try {
         const result = await getProductsBySeller(seller.seller_id);
         setProducts(result);
-        // Extract unique categories for this seller
-        const uniqueCategories = Array.from(new Set(result.map(p => p.category)));
+        // Extract unique categories for this seller (handle backend format)
+        const uniqueCategories = Array.from(new Set(result.map(p => 
+          p.category || p.category_name || p.categoryName
+        ).filter(cat => cat)));
         setCategories(uniqueCategories);
       } catch (err) {
         toast.error("Failed to load seller products");
@@ -51,8 +52,11 @@ function SellerHome() {
 
   // Filter products by search and category
   const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) || product.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = category ? product.category === category : true;
+    const matchesSearch = product.name.toLowerCase().includes(search.toLowerCase()) || 
+                         (product.description && product.description.toLowerCase().includes(search.toLowerCase()));
+    // Handle both backend and frontend category field names
+    const productCategory = product.category || product.category_name || product.categoryName;
+    const matchesCategory = category ? productCategory === category : true;
     return matchesSearch && matchesCategory;
   });
 
@@ -84,11 +88,10 @@ function SellerHome() {
   // Map seller_id to shop_name for quick lookup
   const sellerIdToShopName = React.useMemo(() => {
     const map = {};
-    sellerData.forEach(seller => {
-      map[seller.seller_id] = seller.shop_name;
-    });
+    // Use the current seller's shop name
+    map[seller.seller_id] = seller.shop_name;
     return map;
-  }, []);
+  }, [seller.seller_id, seller.shop_name]);
 
   return (
     <div className="d-flex flex-column min-vh-100 bg-light">
@@ -100,6 +103,7 @@ function SellerHome() {
 
       <main className="flex-grow-1 container py-4">
         <h2 className="text-center mb-4">Your Products</h2>
+        
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
           <input
             type="text"

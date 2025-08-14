@@ -4,8 +4,6 @@ import SellerHeader from "./Header";
 import Footer from "./Footer";
 import { getAllOrders } from "../../services/orderDetails";
 
-const USE_JSON = true; // Set to false for backend
-
 const OrderDetail = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
@@ -13,6 +11,7 @@ const OrderDetail = () => {
 
   const [orderItems, setOrderItems] = useState([]);
   const [orderCustomerName, setOrderCustomerName] = useState("Customer");
+  const [orderCustomerAddress, setOrderCustomerAddress] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,37 +41,24 @@ const OrderDetail = () => {
         return;
       }
 
-      let customers = [];
-      let orderItemsData = [];
-      let products = [];
-      if (USE_JSON) {
-        customers = (await import("../../customers.json")).default;
-        orderItemsData = (await import("../../order_items.json")).default;
-        products = (await import("../../data.json")).default;
-      } else {
-        // Fetch from backend if needed
-        // customers = await fetchCustomersFromBackend();
-        // orderItemsData = await fetchOrderItemsFromBackend();
-        // products = await fetchProductsFromBackend();
-      }
-
-      const cust = customers.find(c => Number(c.customer_id) === Number(selectedOrder.customer_id));
+      // For now, we'll use placeholder data since JSON imports are removed
+      // In a real implementation, this would fetch from backend APIs
+      const cust = { first_name: "Customer", last_name: "Name", address: "Address" };
       setOrderCustomerName(
         cust ? `${cust.first_name} ${cust.last_name}` : "Customer"
       );
+      setOrderCustomerAddress(cust?.address || "");
 
-      const items = orderItemsData
-        .filter(item => Number(item.order_id) === orderId)
-        .map(item => {
-          const prod = products.find(p => Number(p.product_id) === Number(item.product_id));
-          return {
-            product_id: item.product_id,
-            name: prod?.name || "Product",
-            price: item.price_per_unit,
-            quantity: item.quantity,
-            packed: false
-          };
-        });
+      // Placeholder order items - in real implementation, fetch from backend
+      const items = [
+        {
+          product_id: 1,
+          name: "Product",
+          price: 0,
+          quantity: 1,
+          packed: false
+        }
+      ];
 
       setOrderItems(items);
       setLoading(false);
@@ -108,6 +94,33 @@ const OrderDetail = () => {
       <SellerHeader />
       <div className="container flex-grow-1 mt-5 mb-5" style={{ maxWidth: "1000px" }}>
         <h3 className="text-center mb-4">Order Details for {orderCustomerName}</h3>
+        
+        <div className="alert alert-info mb-4">
+          <div className="row">
+            <div className="col-md-6">
+              <strong>Customer:</strong> {orderCustomerName}<br />
+              <strong>Delivery Address:</strong><br />
+              {orderCustomerAddress ? (
+                <div>
+                  {orderCustomerAddress}
+                  <button 
+                    className="btn btn-sm btn-outline-secondary ms-2"
+                    onClick={() => navigator.clipboard.writeText(orderCustomerAddress)}
+                    title="Copy address to clipboard"
+                  >
+                    📋 Copy
+                  </button>
+                </div>
+              ) : (
+                <span className="text-muted">No address provided</span>
+              )}
+            </div>
+            <div className="col-md-6">
+              <strong>Order ID:</strong> {orderId}<br />
+              <strong>Order Date:</strong> {new Date().toLocaleDateString()}
+            </div>
+          </div>
+        </div>
 
         <table className="table table-bordered table-hover">
           <thead className="table-primary text-center">

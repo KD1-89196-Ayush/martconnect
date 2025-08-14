@@ -3,17 +3,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../../StylingSheet/AddProduct.css";
 import Header from "./Header";
 import Footer from "./Footer";
-import { updateProduct } from "../../services/updateProductService"; //
+import { updateProduct } from "../../services/updateProductService";
 
 const UpdateProduct = () => {
   const location = useLocation();
   const existingProduct = location?.state?.product || {
-    id: "", // important for backend updates
+    id: "",
     name: "",
     description: "",
     unit: "",
     price: "",
-    inStock: "",
+    stock: "",
     image: null,
     category: "",
   };
@@ -39,23 +39,42 @@ const UpdateProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedProduct = {
-      ...product,
-      seller_id: seller?.seller_id,
-      product_id: product.product_id || product.id // ensure product_id is present
-    };
-    console.log('Updating product:', updatedProduct);
-    if (!updatedProduct.product_id) {
-      alert('Product ID missing. Cannot update.');
+    
+    // Try different possible ID field names
+    const productId = product.product_id || product.id || product.productId;
+    
+    if (!productId) {
+      alert('Product ID missing. Cannot update. Please check the product data.');
       return;
     }
-    const result = await updateProduct(updatedProduct);
+    
+    const updatedProduct = {
+      name: product.name,
+      description: product.description,
+      price: parseFloat(product.price) || 0,
+      unit: product.unit,
+      stock: parseInt(product.stock) || 0,
+      imageUrl: product.imageUrl || product.image
+    };
+    
+    const result = await updateProduct(productId, updatedProduct);
     if (result.success) {
       alert("Product updated successfully!");
-      navigate('/seller-home'); // Go back to product list
+      navigate('/seller-home');
     } else {
       alert("Failed to update product: " + result.error);
     }
+  };
+
+  // Get category name for display
+  const getCategoryName = () => {
+    if (product.category && typeof product.category === 'object' && product.category.name) {
+      return product.category.name;
+    }
+    if (typeof product.category === 'string') {
+      return product.category;
+    }
+    return "";
   };
 
   return (
@@ -68,7 +87,7 @@ const UpdateProduct = () => {
         <div className="card shadow p-4 w-100" style={{ maxWidth: "600px" }}>
           <h2 className="text-center mb-4">
             Update {product.name}{" "}
-            {product.category ? `(${product.category})` : ""}
+            {getCategoryName() ? `(${getCategoryName()})` : ""}
           </h2>
 
           <form onSubmit={handleSubmit}>
@@ -111,18 +130,6 @@ const UpdateProduct = () => {
                 <option value="Quantity">Quantity</option>
               </select>
             </div>
-            <div className="mb-3">
-              <input
-                type="number"
-                name="quantity"
-                className="form-control"
-                placeholder="Quantity"
-                value={product.quantity || ''}
-                onChange={handleInputChange}
-                min={1}
-                required
-              />
-            </div>
 
             <div className="mb-3">
               <input
@@ -132,35 +139,26 @@ const UpdateProduct = () => {
                 placeholder="Price"
                 value={product.price}
                 onChange={handleInputChange}
+                min="0"
+                step="0.01"
                 required
               />
             </div>
 
             <div className="mb-3">
-              <label className="form-label me-3 fw-bold">In Stock:</label>
-              <div className="form-check form-check-inline">
-                <input
-                  type="radio"
-                  className="form-check-input"
-                  name="inStock"
-                  value="Yes"
-                  checked={product.inStock === "Yes"}
-                  onChange={handleInputChange}
-                  required
-                />
-                <label className="form-check-label">Yes</label>
-              </div>
-              <div className="form-check form-check-inline">
-                <input
-                  type="radio"
-                  className="form-check-input"
-                  name="inStock"
-                  value="No"
-                  checked={product.inStock === "No"}
-                  onChange={handleInputChange}
-                />
-                <label className="form-check-label">No</label>
-              </div>
+              <input
+                type="number"
+                name="stock"
+                className="form-control"
+                placeholder="Stock Quantity"
+                value={product.stock}
+                onChange={handleInputChange}
+                min="0"
+                required
+              />
+              <small className="form-text text-muted">
+                Current stock quantity available for this product
+              </small>
             </div>
 
             <div className="mb-3">
