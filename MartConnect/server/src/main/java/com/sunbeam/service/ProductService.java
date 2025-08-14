@@ -59,80 +59,11 @@ public interface ProductService extends BaseService<ProductDto, Integer> {
      */
     List<ProductDto> findBySeller(Integer sellerId);
     
-    /**
-     * Find products by price range
-     */
-    List<ProductDto> findByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
-    
-    /**
-     * Find products by stock greater than
-     */
-    List<ProductDto> findByStockGreaterThan(Integer minStock);
-    
-    /**
-     * Find products by stock less than or equal
-     */
-    List<ProductDto> findByStockLessThanEqual(Integer maxStock);
-    
-    /**
-     * Find products by unit
-     */
-    List<ProductDto> findByUnit(String unit);
     
     /**
      * Find products by name or description containing
      */
     List<ProductDto> findByNameOrDescriptionContaining(String searchTerm);
-    
-    /**
-     * Find products by categories
-     */
-    List<ProductDto> findByCategories(List<String> categories);
-    
-    /**
-     * Find products by seller and category
-     */
-    List<ProductDto> findBySellerAndCategory(Integer sellerId, String categoryName);
-    
-    /**
-     * Find products by seller and price range
-     */
-    List<ProductDto> findBySellerAndPriceRange(Integer sellerId, BigDecimal minPrice, BigDecimal maxPrice);
-    
-    /**
-     * Find all products with pagination
-     */
-    Page<ProductDto> findAll(Pageable pageable);
-    
-    /**
-     * Find products by category with pagination
-     */
-    Page<ProductDto> findByCategory(String categoryName, Pageable pageable);
-    
-    /**
-     * Find products by seller with pagination
-     */
-    Page<ProductDto> findBySeller(Integer sellerId, Pageable pageable);
-    
-    /**
-     * Find products by name or description containing with pagination
-     */
-    Page<ProductDto> findByNameOrDescriptionContaining(String searchTerm, Pageable pageable);
-    
-    /**
-     * Count products by seller
-     */
-    long countBySeller(Integer sellerId);
-    
-    /**
-     * Count products by category
-     */
-    long countByCategory(String categoryName);
-    
-    /**
-     * Find products with low stock
-     */
-    List<ProductDto> findProductsWithLowStock(Integer lowStockThreshold);
     
     /**
      * Search products by name and category
