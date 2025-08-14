@@ -136,15 +136,4 @@ public class CartServiceImpl implements CartService {
                 .map(cart -> modelMapper.map(cart, CartDto.class))
                 .collect(Collectors.toList());
     }
-    
-    @Override
-    public void clearCustomerCart(Integer customerId) {
-        List<Cart> customerCartItems = cartDao.findByCustomer_CustomerId(customerId);
-        cartDao.deleteAll(customerCartItems);
-    }
-    
-    @Override
-    public long getCustomerCartItemCount(Integer customerId) {
-        return cartDao.countByCustomer_CustomerId(customerId);
-    }
 } 

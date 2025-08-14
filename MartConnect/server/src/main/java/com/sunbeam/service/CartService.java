@@ -30,12 +30,7 @@ public interface CartService extends BaseService<CartDto, Integer> {
     List<CartDto> findByCustomer(Integer customerId);
     
     /**
-     * Clear customer cart
-     */
-    void clearCustomerCart(Integer customerId);
-    
-    /**
      * Get cart item count for customer
      */
-    long getCustomerCartItemCount(Integer customerId);
+
 } 

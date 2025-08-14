@@ -85,30 +85,5 @@ public class AreaServiceImpl implements AreaService {
                 .map(area -> modelMapper.map(area, AreaDto.class))
                 .collect(Collectors.toList());
     }
-    
-    @Override
-    public List<AreaDto> findByCustomerAndPincode(Integer customerId, String pincode) {
-        return areaDao.findByCustomer_CustomerIdAndPincode(customerId, pincode).stream()
-                .map(area -> modelMapper.map(area, AreaDto.class))
-                .collect(Collectors.toList());
-    }
-    
-    @Override
-    public List<AreaDto> findByCustomerAndCity(Integer customerId, String city) {
-        return areaDao.findByCustomer_CustomerIdAndCityContainingIgnoreCase(customerId, city).stream()
-                .map(area -> modelMapper.map(area, AreaDto.class))
-                .collect(Collectors.toList());
-    }
-    
-    @Override
-    public List<AreaDto> findByCustomerAndState(Integer customerId, String state) {
-        return areaDao.findByCustomer_CustomerIdAndStateContainingIgnoreCase(customerId, state).stream()
-                .map(area -> modelMapper.map(area, AreaDto.class))
-                .collect(Collectors.toList());
-    }
-    
-    @Override
-    public long countByCustomer(Integer customerId) { 
-        return areaDao.countByCustomer_CustomerId(customerId); 
-    }
+   
 } 

@@ -20,23 +20,4 @@ public interface AreaService extends BaseService<AreaDto, Integer> {
      */
     List<AreaDto> findByCustomer(Integer customerId);
     
-    /**
-     * Find areas by customer and pincode
-     */
-    List<AreaDto> findByCustomerAndPincode(Integer customerId, String pincode);
-    
-    /**
-     * Find areas by customer and city
-     */
-    List<AreaDto> findByCustomerAndCity(Integer customerId, String city);
-    
-    /**
-     * Find areas by customer and state
-     */
-    List<AreaDto> findByCustomerAndState(Integer customerId, String state);
-    
-    /**
-     * Count areas by customer
-     */
-    long countByCustomer(Integer customerId);
 } 
