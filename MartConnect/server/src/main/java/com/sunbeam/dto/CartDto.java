@@ -1,6 +1,5 @@
 package com.sunbeam.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.Min;
@@ -28,15 +27,4 @@ public class CartDto {
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
-    // Additional fields for display
-    private String productName;
-    private String productImageUrl;
-    private BigDecimal price;
-    private String unit;
-    private String category;
-    private String sellerName;
-    private String shopName;
-    private BigDecimal totalPrice; // quantity * price
-    private Integer availableStock;
 } 
