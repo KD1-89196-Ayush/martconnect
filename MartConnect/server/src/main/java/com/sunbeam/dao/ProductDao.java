@@ -34,9 +34,5 @@ public interface ProductDao extends JpaRepository<Product, Integer> {
     @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<Product> findByNameOrDescriptionContaining(@Param("searchTerm") String searchTerm);
     
-    /**
-     * Find products by name or description containing search term with pagination
-     */
-    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR LOWER(p.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
-    List<Product> findByNameOrDescriptionContaining(@Param("searchTerm") String searchTerm, org.springframework.data.domain.Pageable pageable);
+
 } 
