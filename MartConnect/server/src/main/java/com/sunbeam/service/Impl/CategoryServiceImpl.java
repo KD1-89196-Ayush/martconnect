@@ -1,4 +1,4 @@
-package com.sunbeam.service.impl;
+package com.sunbeam.service.Impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
