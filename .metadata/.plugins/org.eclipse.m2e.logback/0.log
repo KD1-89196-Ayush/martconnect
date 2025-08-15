@@ -1,9 +1,0 @@
-2025-08-02 15:15:04,942 [Worker-2: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is not available. Remote download required.
-2025-08-02 15:15:40,675 [Worker-5: Building] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.example:spring_boot_backend_template:0.0.1 @ C:\Girish\CDAC Project Backend\martconnect\MartConnect\server\pom.xml.
-2025-08-02 15:16:03,065 [Worker-4: Updating Maven Dependencies] INFO  o.e.m.c.i.l.LifecycleMappingFactory - Using org.eclipse.m2e.jdt.JarLifecycleMapping lifecycle mapping for MavenProject: com.example:spring_boot_backend_template:0.0.1 @ C:\Girish\CDAC Project Backend\martconnect\MartConnect\server\pom.xml.
-2025-08-02 15:16:03,092 [Worker-5: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 1 resource from src\main\resources to target\classes
-2025-08-02 15:16:03,143 [Worker-5: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\main\resources to target\classes
-2025-08-02 15:16:03,156 [Worker-5: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - skip non existing resourceDirectory C:\Girish\CDAC Project Backend\martconnect\MartConnect\server\src\test\resources
-2025-08-02 15:16:04,493 [Worker-8: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\main\resources to target\classes
-2025-08-02 15:16:04,496 [Worker-8: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - Copying 0 resource from src\main\resources to target\classes
-2025-08-02 15:16:04,505 [Worker-8: Building] INFO  o.a.m.s.f.DefaultMavenResourcesFiltering - skip non existing resourceDirectory C:\Girish\CDAC Project Backend\martconnect\MartConnect\server\src\test\resources

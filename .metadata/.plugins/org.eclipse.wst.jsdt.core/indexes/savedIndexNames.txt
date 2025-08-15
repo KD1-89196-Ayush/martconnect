@@ -1,6 +1,0 @@
-INDEX VERSION 1.4+C:\Girish\CDAC Project Backend\martconnect\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
-2497029317.index
-3270676994.index
-1327640484.index
-3302274651.index
-2970386816.index
