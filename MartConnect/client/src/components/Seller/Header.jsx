@@ -13,7 +13,6 @@ function Header() {
       localStorage.removeItem("seller");
       localStorage.removeItem("user");
       // Don't remove sellerdata - that contains all registered sellers
-      console.log("Logout: Cleared session data, sellerdata remains:", localStorage.getItem('sellerdata'));
       navigate("/");
 
     }
@@ -34,6 +33,9 @@ function Header() {
               <Link className="nav-link" to="/seller-home">Home</Link>
             </li>
             <li className="nav-item">
+              <Link className="nav-link" to="/seller-dashboard">Dashboard</Link>
+            </li>
+            <li className="nav-item">
               <Link className="nav-link" to="/about">About</Link>
             </li>
             <li className="nav-item">
@@ -44,6 +46,9 @@ function Header() {
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/order-details">Orders</Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link" to="/category-management">Manage Categories</Link>
             </li>
             <li className="nav-item">
               <button className="btn btn-outline-primary btn-sm" onClick={() => setShowProfile(true)}>

@@ -2,10 +2,12 @@ import React from "react";
 
 function CustomerFooter() {
   return (
-    <footer className="text-center py-3" style={{ backgroundColor: "#add8e6" }}>
+    <footer style={{ backgroundColor: '#f1f8e9' }} className="border-top py-3 mt-auto">
       <div className="container">
-        <p className="mb-1">&copy; {new Date().getFullYear()} MartConnect</p>
-        <p className="mb-0">Empowering Customers to Connect with Sellers</p>
+        <div className="text-center">
+          <p className="mb-1">&copy; {new Date().getFullYear()} MartConnect</p>
+          <p className="mb-0 text-muted small">Empowering Customers to Connect with Sellers</p>
+        </div>
       </div>
     </footer>
   );

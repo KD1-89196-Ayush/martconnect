@@ -3,8 +3,6 @@ import { toast } from 'react-toastify';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { loginUser } from '../services/user';
 import { AuthContext } from '../contexts/auth.context';
-import sellerData from '../sellerdata.json';
-import customerData from '../customers.json';
 
 function Login() {
   const { setUser } = useContext(AuthContext);
@@ -13,8 +11,6 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedRole, setSelectedRole] = useState(location.state?.role || 'User');
-  console.log('LOGIN DEBUG: Role from location state:', location.state?.role);
-  console.log('LOGIN DEBUG: Final role being used:', selectedRole);
 
   const onLogin = async () => {
     if (email.trim() === '') {
@@ -44,7 +40,7 @@ function Login() {
           toast.success(`Welcome ${firstName}`);
           navigate('/seller-home', { state: { seller: sellerUser } });
         } else {
-          const { firstName, lastName, token, customer_id, email: userEmail } = result.data;
+          const { firstName, lastName, token, customer_id, email: userEmail, phone, address } = result.data;
           const customerUser = {
             role: 'User',
             first_name: firstName,
@@ -52,6 +48,8 @@ function Login() {
             token,
             customer_id,
             email: userEmail,
+            phone,
+            address,
           };
           setUser(customerUser);
           localStorage.setItem('user', JSON.stringify(customerUser));
@@ -66,54 +64,62 @@ function Login() {
   };
 
   return (
-    <div className='container d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
-      <div className='card shadow-sm p-4 w-100' style={{ maxWidth: '400px' }}>
-        <h3 className='text-center mb-4 text-primary'>{selectedRole} Login</h3>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="card shadow-sm" style={{ maxWidth: '400px', width: '100%' }}>
+        <div className="card-body p-4">
+          <div className="text-center mb-4">
+            <h4 className="text-primary mb-2">Welcome Back</h4>
+            <p className="text-muted">Sign in to your account</p>
+          </div>
 
-        <div className='mb-3'>
-          <label className='form-label'>Role</label>
-          <select 
-            className='form-control' 
-            value={selectedRole} 
-            onChange={(e) => setSelectedRole(e.target.value)}
+          <div className="mb-3">
+            <label className="form-label">Role</label>
+            <select 
+              className="form-select" 
+              value={selectedRole} 
+              onChange={(e) => setSelectedRole(e.target.value)}
+            >
+              <option value='User'>Customer</option>
+              <option value='Seller'>Seller</option>
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <input
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              className="form-control"
+              placeholder="Enter your email"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label">Password</label>
+            <input
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              className="form-control"
+              placeholder="Enter your password"
+            />
+          </div>
+
+          <button
+            onClick={onLogin}
+            className="btn btn-primary w-100 mb-3"
           >
-            <option value='User'>Customer</option>
-            <option value='Seller'>Seller</option>
-          </select>
-        </div>
+            Sign In
+          </button>
 
-        <div className='mb-3'>
-          <label className='form-label'>Email</label>
-          <input
-            onChange={(e) => setEmail(e.target.value)}
-            type='email'
-            className='form-control'
-            placeholder='username@test.com'
-          />
+          <div className="text-center">
+            <p className="text-muted mb-0">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary text-decoration-none">
+                Register here
+              </Link>
+            </p>
+          </div>
         </div>
-
-        <div className='mb-3'>
-          <label className='form-label'>Password</label>
-          <input
-            onChange={(e) => setPassword(e.target.value)}
-            type='password'
-            className='form-control'
-            placeholder='******'
-          />
-        </div>
-
-        <div className='mb-3 text-center'>
-          <span>
-            Don't have an account?{' '}
-            <Link to='/register' className='text-decoration-none'>
-              Register here
-            </Link>
-          </span>
-        </div>
-
-        <button onClick={onLogin} className='btn btn-success w-100'>
-          Login
-        </button>
       </div>
     </div>
   );

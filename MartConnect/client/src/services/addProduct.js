@@ -1,30 +1,18 @@
-const USE_JSON = true; // true = local JSON mode, false = backend mode
+import api from './axiosConfig';
 
 export const addProduct = async (productData) => {
-  if (USE_JSON) {
-    let products = JSON.parse(localStorage.getItem('products')) || [];
-    productData.product_id = products.length ? Math.max(...products.map(p => p.product_id)) + 1 : 1;
-    products.push(productData);
-    localStorage.setItem('products', JSON.stringify(products));
-    return { success: true, message: "Product added locally." };
-  } else {
-    try {
-      const formData = new FormData();
-      for (let key in productData) {
-        formData.append(key, productData[key]);
-      }
+  try {
+    const response = await api.post("/products", productData);
 
-      const response = await fetch("http://localhost:4000/api/products", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Failed to add product");
-
-      const data = await response.json();
-      return { success: true, data };
-    } catch (err) {
-      return { success: false, error: err.message };
+    // Handle direct response (new format)
+    if (response.data && response.data.productId) {
+      return { success: true, data: response.data };
+    } else if (response.data.success) {
+      return { success: true, data: response.data.data };
+    } else {
+      throw new Error(response.data.message || "Failed to add product");
     }
+  } catch (err) {
+    return { success: false, error: err.response?.data?.message || err.message };
   }
 };

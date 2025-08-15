@@ -1,60 +1,53 @@
 // services/sellerProductService.js
-import axios from "axios";
-// import productData from "../data.json"; // Remove static import
-
-const BASE_URL = "http://localhost:8080/api";
-const USE_JSON = true; // Toggle to true for local JSON, false for backend
+import api from "./axiosConfig";
 
 // Fetch products for a specific seller
 export const getProductsBySeller = async (sellerId) => {
-  if (USE_JSON) {
-    let productData = JSON.parse(localStorage.getItem('products'));
-    if (!productData) {
-      const module = await import("../data.json");
-      productData = module.default;
-    }
-    return productData.filter((product) => product.seller_id === sellerId);
-  }
   try {
-    const response = await axios.get(`${BASE_URL}/products/seller/${sellerId}`);
-    return response.data;
-  } catch (error) {
-    // fallback to dynamic import
-    let productData = JSON.parse(localStorage.getItem('products'));
-    if (!productData) {
-      const module = await import("../data.json");
-      productData = module.default;
+    const response = await api.get(`/products/seller/${sellerId}`);
+    // Handle direct array response (new format)
+    if (Array.isArray(response.data)) {
+      return response.data;
+    } else if (response.data.success) {
+      return response.data.data.content || response.data.data;
+    } else {
+      throw new Error(response.data.message);
     }
-    return productData.filter((product) => product.seller_id === sellerId);
+  } catch (error) {
+    throw error;
   }
 };
 
 // Delete product
 export const deleteProductById = async (productId) => {
-  if (USE_JSON) {
-    console.log(`[DEV] Simulate deleteProduct: ${productId}`);
-    return { status: "success" };
-  }
   try {
-    const response = await axios.delete(`${BASE_URL}/products/${productId}`);
-    return response.data;
+    const response = await api.delete(`/products/${productId}`);
+    // Handle direct response (new format)
+    if (response.status === 200) {
+      return { status: "success" };
+    } else if (response.data.success) {
+      return { status: "success" };
+    } else {
+      throw new Error(response.data.message);
+    }
   } catch (error) {
-    console.error("Delete failed:", error);
-    return null;
+    throw error;
   }
 };
 
 // Update product
 export const updateProductById = async (productId, productData) => {
-  if (USE_JSON) {
-    console.log(`[DEV] Simulate updateProduct: ${productId}`, productData);
-    return { status: "success" };
-  }
   try {
-    const response = await axios.put(`${BASE_URL}/products/${productId}`, productData);
-    return response.data;
+    const response = await api.put(`/products/${productId}`, productData);
+    // Handle direct object response (new format)
+    if (response.data && response.data.productId) {
+      return { status: "success", data: response.data };
+    } else if (response.data.success) {
+      return { status: "success", data: response.data.data };
+    } else {
+      throw new Error(response.data.message);
+    }
   } catch (error) {
-    console.error("Update failed:", error);
-    return null;
+    throw error;
   }
 };
