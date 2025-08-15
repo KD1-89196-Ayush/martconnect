@@ -1,7 +1,7 @@
 import React from 'react';
 
 function CustomerProfile({ show, onClose }) {
-  const customer = JSON.parse(sessionStorage.getItem('customer')) || JSON.parse(localStorage.getItem('user')) || {};
+  const customer = JSON.parse(localStorage.getItem('customer')) || {};
   if (!show) return null;
   return (
     <div className="offcanvas offcanvas-end show" tabIndex="-1" style={{ visibility: 'visible', width: 400, background: '#fff', zIndex: 1050 }}>

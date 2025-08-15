@@ -6,6 +6,11 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.sunbeam.entities.Product;
+import com.sunbeam.dto.ProductDto;
 
 @SpringBootApplication // includes @Configuration
 public class Application {
@@ -34,8 +39,24 @@ public class Application {
 				 * To tell ModelMapper not to transfer nulls from src -> dest
 				 */
 				.setPropertyCondition(Conditions.isNotNull());// use case - PUT
+		
+		// Add custom mapping for Product to ProductDto
+		mapper.createTypeMap(com.sunbeam.entities.Product.class, com.sunbeam.dto.ProductDto.class)
+			.addMappings(mapping -> {
+				mapping.map(Product::getCategoryName, ProductDto::setCategory);
+			});
+		
 		return mapper;
 
+	}
+	
+	/*
+	 * Configure spring sec supplied password encoder bean
+	 */
+	@Bean
+	PasswordEncoder passwordEncoder() 
+	{
+		return new BCryptPasswordEncoder();
 	}
 
 }

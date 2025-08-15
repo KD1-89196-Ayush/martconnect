@@ -56,126 +56,158 @@ function Register() {
   };
 
   return (
-    <div className='container d-flex justify-content-center align-items-center' style={{ minHeight: '100vh' }}>
-      <div className='card shadow-sm p-4 w-100' style={{ maxWidth: '500px' }}>
-        <h3 className='text-center mb-4 text-primary'>Register</h3>
-        <div className='mb-3 d-flex justify-content-center gap-2'>
-          <button
-            className={`btn btn-${userType === 'Customer' ? 'primary' : 'outline-primary'}`}
-            onClick={() => setUserType('Customer')}
-          >
-            Customer
-          </button>
-          <button
-            className={`btn btn-${userType === 'Seller' ? 'primary' : 'outline-primary'}`}
-            onClick={() => setUserType('Seller')}
-          >
-            Seller
-          </button>
-        </div>
-        <div className='row'>
-          <div className='col-md-6 mb-3'>
-            <label className='form-label'>First Name</label>
-            <input
-              onChange={e => setFirstName(e.target.value)}
-              type='text'
-              className='form-control'
-              value={firstName}
-            />
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
+      <div className="card shadow-sm" style={{ maxWidth: '500px', width: '100%' }}>
+        <div className="card-body p-4">
+          <div className="text-center mb-4">
+            <h4 className="text-primary mb-2">Create Account</h4>
+            <p className="text-muted">Join MartConnect today</p>
           </div>
-          <div className='col-md-6 mb-3'>
-            <label className='form-label'>Last Name</label>
-            <input
-              onChange={e => setLastName(e.target.value)}
-              type='text'
-              className='form-control'
-              value={lastName}
-            />
+
+          <div className="mb-3">
+            <label className="form-label">Account Type</label>
+            <div className="d-flex gap-2">
+              <button
+                className={`btn flex-fill ${userType === 'Customer' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setUserType('Customer')}
+              >
+                Customer
+              </button>
+              <button
+                className={`btn flex-fill ${userType === 'Seller' ? 'btn-primary' : 'btn-outline-primary'}`}
+                onClick={() => setUserType('Seller')}
+              >
+                Seller
+              </button>
+            </div>
           </div>
-        </div>
-        <div className='mb-3'>
-          <label className='form-label'>Email</label>
-          <input
-            onChange={e => setEmail(e.target.value)}
-            type='email'
-            className='form-control'
-            value={email}
-          />
-        </div>
-        <div className='mb-3'>
-          <label className='form-label'>Phone Number</label>
-          <input
-            onChange={e => setPhone(e.target.value)}
-            type='tel'
-            className='form-control'
-            value={phone}
-          />
-        </div>
-        <div className='mb-3'>
-          <label className='form-label'>Password</label>
-          <input
-            onChange={e => setPassword(e.target.value)}
-            type='password'
-            className='form-control'
-            value={password}
-          />
-        </div>
-        <div className='mb-3'>
-          <label className='form-label'>Confirm Password</label>
-          <input
-            onChange={e => setConfirmPassword(e.target.value)}
-            type='password'
-            className='form-control'
-            value={confirmPassword}
-          />
-        </div>
-        {userType === 'Customer' && (
-          <div className='mb-3'>
-            <label className='form-label'>Address</label>
-            <textarea
-              className='form-control'
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              rows={3}
-              placeholder='Enter your full delivery address'
-            />
-          </div>
-        )}
-        {userType === 'Seller' && (
-          <>
-            <div className='mb-3'>
-              <label className='form-label'>Shop Name</label>
+
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">First Name</label>
               <input
-                type='text'
-                className='form-control'
-                value={shopName}
-                onChange={e => setShopName(e.target.value)}
-                placeholder='Enter your shop name'
+                onChange={e => setFirstName(e.target.value)}
+                type="text"
+                className="form-control"
+                value={firstName}
+                placeholder="Enter first name"
               />
             </div>
-            <div className='mb-3'>
-              <label className='form-label'>Shop Address</label>
+            <div className="col-md-6">
+              <label className="form-label">Last Name</label>
+              <input
+                onChange={e => setLastName(e.target.value)}
+                type="text"
+                className="form-control"
+                value={lastName}
+                placeholder="Enter last name"
+              />
+            </div>
+          </div>
+
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Email</label>
+              <input
+                onChange={e => setEmail(e.target.value)}
+                type="email"
+                className="form-control"
+                value={email}
+                placeholder="Enter email"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Phone</label>
+              <input
+                onChange={e => setPhone(e.target.value)}
+                type="tel"
+                className="form-control"
+                value={phone}
+                placeholder="Enter phone"
+              />
+            </div>
+          </div>
+
+          <div className="row g-3 mb-3">
+            <div className="col-md-6">
+              <label className="form-label">Password</label>
+              <input
+                onChange={e => setPassword(e.target.value)}
+                type="password"
+                className="form-control"
+                value={password}
+                placeholder="Enter password"
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Confirm Password</label>
+              <input
+                onChange={e => setConfirmPassword(e.target.value)}
+                type="password"
+                className="form-control"
+                value={confirmPassword}
+                placeholder="Confirm password"
+              />
+            </div>
+          </div>
+
+          {userType === 'Customer' && (
+            <div className="mb-3">
+              <label className="form-label">Address</label>
               <textarea
-                className='form-control'
-                value={shopAddress}
-                onChange={e => setShopAddress(e.target.value)}
-                rows={2}
-                placeholder='Enter your shop address'
-              />
+                onChange={e => setAddress(e.target.value)}
+                className="form-control"
+                value={address}
+                placeholder="Enter your address"
+                rows="3"
+              ></textarea>
             </div>
-          </>
-        )}
-        <div className='text-center mb-3'>
-          <span>
-            Already have an account?{' '}
-            <button onClick={onBack} className='btn btn-link p-0 text-decoration-none'>
-              Login here
-            </button>
-          </span>
+          )}
+
+          {userType === 'Seller' && (
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <label className="form-label">Shop Name</label>
+                <input
+                  onChange={e => setShopName(e.target.value)}
+                  type="text"
+                  className="form-control"
+                  value={shopName}
+                  placeholder="Enter shop name"
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Shop Address</label>
+                <input
+                  onChange={e => setShopAddress(e.target.value)}
+                  type="text"
+                  className="form-control"
+                  value={shopAddress}
+                  placeholder="Enter shop address"
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onRegister}
+            className="btn btn-primary w-100 mb-3"
+          >
+            Create Account
+          </button>
+
+          <div className="text-center">
+            <p className="text-muted mb-0">
+              Already have an account?{' '}
+              <button 
+                onClick={()=>navigate("/login")}
+                className="text-primary text-decoration-none border-0 bg-transparent"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
         </div>
-        <button onClick={onRegister} className='btn btn-success w-100'>
-          Register
-        </button>
       </div>
     </div>
   );

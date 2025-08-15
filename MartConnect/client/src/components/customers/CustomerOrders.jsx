@@ -12,15 +12,21 @@ function CustomerOrders() {
   useEffect(() => {
     const loadOrders = async () => {
       try {
-        const customer = JSON.parse(sessionStorage.getItem("customer"));
+        const customer = JSON.parse(localStorage.getItem("customer"));
         if (!customer) {
           toast.error("Please login to view your orders.");
           return;
         }
         const result = await getCustomerOrders(customer.customer_id);
+        
+        if (!result || !Array.isArray(result)) {
+          toast.error("Failed to load orders - invalid data format");
+          return;
+        }
+        
         setOrders(result);
       } catch (err) {
-        toast.error("Failed to load orders");
+        toast.error("Failed to load orders: " + err.message);
       }
     };
     loadOrders();
@@ -49,25 +55,26 @@ function CustomerOrders() {
       </head>
       <body>
         <h2>MartConnect Invoice</h2>
-        <p><b>Order ID:</b> ${selectedOrder.order_id}</p>
-        <p><b>Date:</b> ${selectedOrder.date}</p>
-        <p><b>Status:</b> ${selectedOrder.status}</p>
+        <p><b>Order ID:</b> ${selectedOrder.orderId || selectedOrder.order_id}</p>
+        <p><b>Date:</b> ${selectedOrder.orderDate || selectedOrder.date}</p>
+        <p><b>Status:</b> ${selectedOrder.paymentStatus || selectedOrder.status}</p>
         <table>
           <thead>
             <tr><th>Product</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr>
           </thead>
           <tbody>
-            ${selectedOrder.items.map(item => `
+            ${(selectedOrder.orderItems || selectedOrder.items || []).map(item => `
               <tr>
-                <td>${item.name}</td>
+                <td>${(item.product && item.product.name) || item.name}</td>
                 <td>${item.quantity}</td>
-                <td>₹${item.price}</td>
-                <td>₹${item.price * item.quantity}</td>
+                <td>₹${item.pricePerUnit || item.price}</td>
+                <td>₹${(item.pricePerUnit || item.price) * item.quantity}</td>
               </tr>
             `).join('')}
           </tbody>
         </table>
-        <p class="total">Total: ₹${selectedOrder.total}</p>
+        <p><b>Items Total:</b> ₹${(selectedOrder.orderItems || selectedOrder.items || []).reduce((sum, item) => sum + (item.pricePerUnit || item.price) * item.quantity, 0)}</p>
+        <p class="total"><b>Total Amount:</b> ₹${selectedOrder.totalAmount || selectedOrder.total}</p>
         <p>Thank you for shopping with MartConnect!</p>
       </body>
       </html>
@@ -100,16 +107,25 @@ function CustomerOrders() {
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order.order_id}>
-                    <td>{order.order_id}</td>
-                    <td>{order.date}</td>
-                    <td>{order.status}</td>
-                    <td>₹{order.total}</td>
+                  <tr key={order.orderId || order.order_id}>
+                    <td>{order.orderId || order.order_id}</td>
+                    <td>{order.orderDate || order.date}</td>
+                    <td>{order.paymentStatus || order.status}</td>
+                    <td>
+                      ₹{order.totalAmount || order.total}
+                      {order.orderItems && order.orderItems.length > 0 && (
+                        <div>
+                          <small className="text-muted">
+                            Items: ₹{order.orderItems.reduce((sum, item) => sum + (item.pricePerUnit * item.quantity), 0)}
+                          </small>
+                        </div>
+                      )}
+                    </td>
                     <td>
                       <ul>
-                        {order.items.map((item) => (
-                          <li key={item.product_id}>
-                            {item.name} x {item.quantity} (₹{item.price})
+                        {(order.orderItems || order.items || []).map((item) => (
+                          <li key={item.productId || item.product_id}>
+                            {(item.product && item.product.name) || item.name} x {item.quantity} (₹{item.pricePerUnit || item.price})
                           </li>
                         ))}
                       </ul>
@@ -138,15 +154,23 @@ function CustomerOrders() {
                   <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
                 </div>
                 <div className="modal-body">
-                  <p><b>Order ID:</b> {selectedOrder.order_id}</p>
-                  <p><b>Date:</b> {selectedOrder.date}</p>
-                  <p><b>Status:</b> {selectedOrder.status}</p>
-                  <p><b>Total:</b> ₹{selectedOrder.total}</p>
+                  <p><b>Order ID:</b> {selectedOrder.orderId || selectedOrder.order_id}</p>
+                  <p><b>Date:</b> {selectedOrder.orderDate || selectedOrder.date}</p>
+                  <p><b>Status:</b> {selectedOrder.paymentStatus || selectedOrder.status}</p>
+                  <p><b>Total:</b> ₹{selectedOrder.totalAmount || selectedOrder.total}</p>
+                  {selectedOrder.orderItems && selectedOrder.orderItems.length > 0 && (
+                    <div>
+                      <p><b>Breakdown:</b></p>
+                      <ul>
+                        <li>Items: ₹{selectedOrder.orderItems.reduce((sum, item) => sum + (item.pricePerUnit * item.quantity), 0)}</li>
+                      </ul>
+                    </div>
+                  )}
                   <p><b>Products:</b></p>
                   <ul>
-                    {selectedOrder.items.map((item) => (
-                      <li key={item.product_id}>
-                        {item.name} x {item.quantity} (₹{item.price})
+                    {(selectedOrder.orderItems || selectedOrder.items || []).map((item) => (
+                      <li key={item.productId || item.product_id}>
+                        {(item.product && item.product.name) || item.name} x {item.quantity} (₹{item.pricePerUnit || item.price})
                       </li>
                     ))}
                   </ul>
