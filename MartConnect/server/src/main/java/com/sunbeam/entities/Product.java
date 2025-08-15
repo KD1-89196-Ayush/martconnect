@@ -2,6 +2,10 @@ package com.sunbeam.entities;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,20 +15,25 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "products")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = {"category", "seller", "orderItems", "cartItems", "productImages"})
 public class Product {
     
     @Id
@@ -56,18 +65,54 @@ public class Product {
     @Column(name = "image_url", length = 255)
     private String imageUrl;
     
-    @NotBlank(message = "Category is required")
-    @Column(name = "category", nullable = false, length = 50)
-    private String category;
+    @NotNull(message = "Category is required")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
+    private Category category;
+    
+    // Getter methods to expose category and seller info in JSON responses
+    @com.fasterxml.jackson.annotation.JsonProperty("category_id")
+    public Integer getCategoryId() {
+        return category != null ? category.getCategoryId() : null;
+    }
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("category")
+    public String getCategoryName() {
+        return category != null ? category.getName() : null;
+    }
     
     @NotNull(message = "Seller is required")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "seller_id", nullable = false)
+    @JsonIgnore
     private Seller seller;
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("seller_id")
+    public Integer getSellerId() {
+        return seller != null ? seller.getSellerId() : null;
+    }
+    
+    @com.fasterxml.jackson.annotation.JsonProperty("seller")
+    public String getSellerName() {
+        return seller != null ? seller.getShopName() : null;
+    }
     
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @JsonIgnore
+    private List<OrderItem> orderItems = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @JsonIgnore
+    private List<Cart> cartItems = new ArrayList<>();
+    
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @JsonIgnore
+    private List<ProductImage> productImages = new ArrayList<>();
 } 
